@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "dgSpecHash": "osQImIPcUuJM0T/xEIpHbeY4VudX5F5M3I30+tnAMW72o1PoNgXvcOVzwgvcBPPMvsUo0ZTf3Ha5bYY7H8o5nw==",
+  "success": true,
+  "projectFilePath": "D:\\Projects\\web\\MyMDb\\MyMDb\\MyMDb\\MyMDb.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Gabi\\.nuget\\packages\\microsoft.extensions.apidescription.server\\6.0.5\\microsoft.extensions.apidescription.server.6.0.5.nupkg.sha512",
+    "C:\\Users\\Gabi\\.nuget\\packages\\microsoft.openapi\\1.2.3\\microsoft.openapi.1.2.3.nupkg.sha512",
+    "C:\\Users\\Gabi\\.nuget\\packages\\swashbuckle.aspnetcore\\6.4.0\\swashbuckle.aspnetcore.6.4.0.nupkg.sha512",
+    "C:\\Users\\Gabi\\.nuget\\packages\\swashbuckle.aspnetcore.swagger\\6.4.0\\swashbuckle.aspnetcore.swagger.6.4.0.nupkg.sha512",
+    "C:\\Users\\Gabi\\.nuget\\packages\\swashbuckle.aspnetcore.swaggergen\\6.4.0\\swashbuckle.aspnetcore.swaggergen.6.4.0.nupkg.sha512",
+    "C:\\Users\\Gabi\\.nuget\\packages\\swashbuckle.aspnetcore.swaggerui\\6.4.0\\swashbuckle.aspnetcore.swaggerui.6.4.0.nupkg.sha512"
+  ],
+  "logs": []
+}

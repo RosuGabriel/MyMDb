@@ -1,0 +1,6 @@
+@MyMDb_HostAddress = http://localhost:5169
+
+GET {{MyMDb_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
