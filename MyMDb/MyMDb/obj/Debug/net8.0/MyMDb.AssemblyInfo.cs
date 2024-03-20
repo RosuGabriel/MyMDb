@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MyMDb")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9401c52eca5bdbccf4970754debac97dd1b9c3ba")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+94563522f503fad427316833dcf3422d0a2c16b3")]
 [assembly: System.Reflection.AssemblyProductAttribute("MyMDb")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MyMDb")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

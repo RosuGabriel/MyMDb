@@ -10,4 +10,11 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Models\Movie\" />
+    <Folder Include="Models\Profile\" />
+    <Folder Include="Models\User\" />
+    <Folder Include="Models\Review\" />
+  </ItemGroup>
+
 </Project>
