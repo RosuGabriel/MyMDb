@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Projects\\web\\MyMDb\\MyMDb\\MyMDb\\MyMDb.csproj": {}
+    "D:\\Projects\\web\\MyMDb'\\MyMDb\\MyMDb\\MyMDb.csproj": {}
   },
   "projects": {
-    "D:\\Projects\\web\\MyMDb\\MyMDb\\MyMDb\\MyMDb.csproj": {
+    "D:\\Projects\\web\\MyMDb'\\MyMDb\\MyMDb\\MyMDb.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Projects\\web\\MyMDb\\MyMDb\\MyMDb\\MyMDb.csproj",
+        "projectUniqueName": "D:\\Projects\\web\\MyMDb'\\MyMDb\\MyMDb\\MyMDb.csproj",
         "projectName": "MyMDb",
-        "projectPath": "D:\\Projects\\web\\MyMDb\\MyMDb\\MyMDb\\MyMDb.csproj",
+        "projectPath": "D:\\Projects\\web\\MyMDb'\\MyMDb\\MyMDb\\MyMDb.csproj",
         "packagesPath": "C:\\Users\\Gabi\\.nuget\\packages\\",
-        "outputPath": "D:\\Projects\\web\\MyMDb\\MyMDb\\MyMDb\\obj\\",
+        "outputPath": "D:\\Projects\\web\\MyMDb'\\MyMDb\\MyMDb\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Gabi\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -34,15 +34,50 @@
           "warnAsError": [
             "NU1605"
           ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
         }
       },
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "AutoMapper": {
+              "target": "Package",
+              "version": "[13.0.1, )"
+            },
+            "Microsoft.AspNetCore.Components.QuickGrid.EntityFrameworkAdapter": {
+              "target": "Package",
+              "version": "[8.0.6, )"
+            },
+            "Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.6, )"
+            },
+            "Microsoft.AspNetCore.Identity.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.6, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.6, )"
+            },
+            "Microsoft.EntityFrameworkCore.SqlServer": {
+              "target": "Package",
+              "version": "[8.0.6, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.6, )"
+            },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
-              "version": "[6.4.0, )"
+              "version": "[6.6.2, )"
             }
           },
           "imports": [
@@ -64,7 +99,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.102/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.202/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
