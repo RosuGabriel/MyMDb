@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using MyMDb.Models.Reviews;
 
 namespace MyMDb.Models
 {

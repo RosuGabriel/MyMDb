@@ -22,7 +22,7 @@ namespace MyMDb.Models.Base
         // Metodă care actualizează DateModified la fiecare modificare
         public virtual void UpdateDateModified()
         {
-            DateModified = DateTime.UtcNow;
+            DateModified = DateTime.Now;
         }
     }
 }

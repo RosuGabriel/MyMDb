@@ -31,6 +31,19 @@ namespace MyMDb.Data
                 .WithOne(u => u.UserProfile)
                 .HasForeignKey<UserProfile>(p => p.UserId);
 
+            // movie types (movie, series or episode)
+            builder.Entity<Movie>()
+           .HasDiscriminator<string>("Discriminator")
+           .HasValue<Movie>("Movie")
+           .HasValue<Series>("Series")
+           .HasValue<Episode>("Episode");
+
+            // series - episodes
+            builder.Entity<Series>()
+                .HasMany(s => s.Episodes)
+                .WithOne(e => e.Series)
+                .HasForeignKey(e => e.SeriesId);
+
             // movie - reviews
             builder.Entity<Movie>()
                 .HasKey(m => m.Id);
