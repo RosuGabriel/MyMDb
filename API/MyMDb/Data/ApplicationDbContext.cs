@@ -13,9 +13,7 @@ namespace MyMDb.Data
 
         public DbSet<AppUser> AppUsers { get; set; }
         public DbSet<UserProfile> UserProfiles { get; set; }
-        public DbSet<Movie> Movies { get; set; }
-        public DbSet<Series> Series { get; set; }
-        public DbSet<Episode> Episodes { get; set; }
+        public DbSet<Media> Media { get; set; }
         public DbSet<Review> Reviews { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -32,7 +30,7 @@ namespace MyMDb.Data
                 .HasForeignKey<UserProfile>(p => p.UserId);
 
             // movie types (movie, series or episode)
-            builder.Entity<Movie>()
+            builder.Entity<Media>()
            .HasDiscriminator<string>("Discriminator")
            .HasValue<Movie>("Movie")
            .HasValue<Series>("Series")
@@ -44,14 +42,14 @@ namespace MyMDb.Data
                 .WithOne(e => e.Series)
                 .HasForeignKey(e => e.SeriesId);
 
-            // movie - reviews
-            builder.Entity<Movie>()
+            // media - reviews
+            builder.Entity<Media>()
                 .HasKey(m => m.Id);
 
-            builder.Entity<Movie>()
+            builder.Entity<Media>()
                 .HasMany(m => m.Reviews)
-                .WithOne(r => r.Movie)
-                .HasForeignKey(m => m.MovieId);
+                .WithOne(r => r.Media)
+                .HasForeignKey(m => m.MediaId);
 
             // user - reviews
             builder.Entity<Review>()

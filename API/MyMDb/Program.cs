@@ -2,6 +2,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MyMDb.Data;
 using MyMDb.Models;
+using MyMDb.Repositories;
+using MyMDb.RepositoryInterfaces;
+using MyMDb.ServiceInterfaces;
+using MyMDb.Services;
 
 
 
@@ -21,6 +25,16 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(connectionString);
 });
+
+// Repositories
+builder.Services.AddScoped<IMediaRepository, MediaRepository>();
+builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+// Services
+builder.Services.AddScoped<IMediaService, MediaService>();
+
 
 // Add Identity
 builder.Services.AddIdentity<AppUser, IdentityRole>()

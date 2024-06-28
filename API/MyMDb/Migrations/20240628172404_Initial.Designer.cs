@@ -12,7 +12,7 @@ using MyMDb.Data;
 namespace MyMDb.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240627144324_Initial")]
+    [Migration("20240628172404_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -223,7 +223,7 @@ namespace MyMDb.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("MyMDb.Models.Movie", b =>
+            modelBuilder.Entity("MyMDb.Models.Media", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -257,9 +257,9 @@ namespace MyMDb.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Movies");
+                    b.ToTable("Media");
 
-                    b.HasDiscriminator<string>("Discriminator").HasValue("Movie");
+                    b.HasDiscriminator<string>("Discriminator").HasValue("Media");
 
                     b.UseTphMappingStrategy();
                 });
@@ -279,7 +279,7 @@ namespace MyMDb.Migrations
                     b.Property<DateTime?>("DateModified")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid?>("MovieId")
+                    b.Property<Guid?>("MediaId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<double?>("Rating")
@@ -290,7 +290,7 @@ namespace MyMDb.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MovieId");
+                    b.HasIndex("MediaId");
 
                     b.HasIndex("UserId");
 
@@ -329,7 +329,13 @@ namespace MyMDb.Migrations
 
             modelBuilder.Entity("MyMDb.Models.Episode", b =>
                 {
-                    b.HasBaseType("MyMDb.Models.Movie");
+                    b.HasBaseType("MyMDb.Models.Media");
+
+                    b.Property<int?>("EpisodeNumber")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SeasonNumber")
+                        .HasColumnType("int");
 
                     b.Property<Guid?>("SeriesId")
                         .HasColumnType("uniqueidentifier");
@@ -339,9 +345,16 @@ namespace MyMDb.Migrations
                     b.HasDiscriminator().HasValue("Episode");
                 });
 
+            modelBuilder.Entity("MyMDb.Models.Movie", b =>
+                {
+                    b.HasBaseType("MyMDb.Models.Media");
+
+                    b.HasDiscriminator().HasValue("Movie");
+                });
+
             modelBuilder.Entity("MyMDb.Models.Series", b =>
                 {
-                    b.HasBaseType("MyMDb.Models.Movie");
+                    b.HasBaseType("MyMDb.Models.Media");
 
                     b.HasDiscriminator().HasValue("Series");
                 });
@@ -399,15 +412,15 @@ namespace MyMDb.Migrations
 
             modelBuilder.Entity("MyMDb.Models.Review", b =>
                 {
-                    b.HasOne("MyMDb.Models.Movie", "Movie")
+                    b.HasOne("MyMDb.Models.Media", "Media")
                         .WithMany("Reviews")
-                        .HasForeignKey("MovieId");
+                        .HasForeignKey("MediaId");
 
                     b.HasOne("MyMDb.Models.AppUser", "User")
                         .WithMany("Reviews")
                         .HasForeignKey("UserId");
 
-                    b.Navigation("Movie");
+                    b.Navigation("Media");
 
                     b.Navigation("User");
                 });
@@ -437,7 +450,7 @@ namespace MyMDb.Migrations
                     b.Navigation("UserProfile");
                 });
 
-            modelBuilder.Entity("MyMDb.Models.Movie", b =>
+            modelBuilder.Entity("MyMDb.Models.Media", b =>
                 {
                     b.Navigation("Reviews");
                 });

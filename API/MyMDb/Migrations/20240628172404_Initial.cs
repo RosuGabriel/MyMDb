@@ -51,7 +51,7 @@ namespace MyMDb.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Movies",
+                name: "Media",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -61,17 +61,19 @@ namespace MyMDb.Migrations
                     PosterPath = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     VideoPath = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Discriminator = table.Column<string>(type: "nvarchar(8)", maxLength: 8, nullable: false),
+                    SeasonNumber = table.Column<int>(type: "int", nullable: true),
+                    EpisodeNumber = table.Column<int>(type: "int", nullable: true),
                     SeriesId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: true),
                     DateModified = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Movies", x => x.Id);
+                    table.PrimaryKey("PK_Media", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Movies_Movies_SeriesId",
+                        name: "FK_Media_Media_SeriesId",
                         column: x => x.SeriesId,
-                        principalTable: "Movies",
+                        principalTable: "Media",
                         principalColumn: "Id");
                 });
 
@@ -210,7 +212,7 @@ namespace MyMDb.Migrations
                     Rating = table.Column<double>(type: "float", nullable: true),
                     Comment = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    MovieId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    MediaId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: true),
                     DateModified = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -223,9 +225,9 @@ namespace MyMDb.Migrations
                         principalTable: "AspNetUsers",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_Reviews_Movies_MovieId",
-                        column: x => x.MovieId,
-                        principalTable: "Movies",
+                        name: "FK_Reviews_Media_MediaId",
+                        column: x => x.MediaId,
+                        principalTable: "Media",
                         principalColumn: "Id");
                 });
 
@@ -269,14 +271,14 @@ namespace MyMDb.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Movies_SeriesId",
-                table: "Movies",
+                name: "IX_Media_SeriesId",
+                table: "Media",
                 column: "SeriesId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Reviews_MovieId",
+                name: "IX_Reviews_MediaId",
                 table: "Reviews",
-                column: "MovieId");
+                column: "MediaId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Reviews_UserId",
@@ -319,7 +321,7 @@ namespace MyMDb.Migrations
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "Movies");
+                name: "Media");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
