@@ -60,7 +60,7 @@ namespace MyMDb.Migrations
                     ReleaseDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     PosterPath = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     VideoPath = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Discriminator = table.Column<string>(type: "nvarchar(8)", maxLength: 8, nullable: false),
+                    MediaType = table.Column<string>(type: "nvarchar(8)", maxLength: 8, nullable: false),
                     SeasonNumber = table.Column<int>(type: "int", nullable: true),
                     EpisodeNumber = table.Column<int>(type: "int", nullable: true),
                     SeriesId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),

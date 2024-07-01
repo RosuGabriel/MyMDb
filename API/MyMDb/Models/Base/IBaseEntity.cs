@@ -1,6 +1,6 @@
 ﻿namespace MyMDb.Models.Base
 {
-    public class IBaseEntity
+    public interface IBaseEntity
     {
         Guid Id { get; set; }
         DateTime? DateCreated { get; set; }

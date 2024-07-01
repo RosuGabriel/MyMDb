@@ -235,7 +235,7 @@ namespace MyMDb.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Discriminator")
+                    b.Property<string>("MediaType")
                         .IsRequired()
                         .HasMaxLength(8)
                         .HasColumnType("nvarchar(8)");
@@ -256,7 +256,7 @@ namespace MyMDb.Migrations
 
                     b.ToTable("Media");
 
-                    b.HasDiscriminator<string>("Discriminator").HasValue("Media");
+                    b.HasDiscriminator<string>("MediaType").HasValue("Media");
 
                     b.UseTphMappingStrategy();
                 });
@@ -329,12 +329,15 @@ namespace MyMDb.Migrations
                     b.HasBaseType("MyMDb.Models.Media");
 
                     b.Property<int?>("EpisodeNumber")
+                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<int?>("SeasonNumber")
+                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<Guid?>("SeriesId")
+                        .IsRequired()
                         .HasColumnType("uniqueidentifier");
 
                     b.HasIndex("SeriesId");
@@ -435,7 +438,9 @@ namespace MyMDb.Migrations
                 {
                     b.HasOne("MyMDb.Models.Series", "Series")
                         .WithMany("Episodes")
-                        .HasForeignKey("SeriesId");
+                        .HasForeignKey("SeriesId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.Navigation("Series");
                 });

@@ -13,7 +13,7 @@ namespace MyMDb.Services
             _MediaRepository = MediaRepository;
         }
 
-        // getting all
+        // getting
         public async Task<ICollection<Media>> GetAllMedia()
         {
             return await _MediaRepository.GetAllMediaAsync();
@@ -34,8 +34,7 @@ namespace MyMDb.Services
             return await _MediaRepository.GetEpisodesBySeriesIdAsync(seriesId);
         }
 
-        // getting one
-        public async Task<Media> GetMedia(Guid id)
+        public async Task<Media?> GetById(Guid id)
         {
             return await _MediaRepository.GetByIdAsync(id);
         }
@@ -51,6 +50,8 @@ namespace MyMDb.Services
             newMovie.PosterPath = posterPath;
             newMovie.VideoPath = videoPath;
 
+            newMovie.Initialize();
+
             return await _MediaRepository.CreateMovieAsync(newMovie);
         }
 
@@ -63,10 +64,12 @@ namespace MyMDb.Services
             newSeries.ReleaseDate = releaseDate;
             newSeries.PosterPath = posterPath;
 
+            newSeries.Initialize();
+
             return await _MediaRepository.CreateSeriesAsync(newSeries);
         }
 
-        public async Task<Episode> AddEpisode(string? title, string? description, DateTime? releaseDate, string? posterPath, string? videoPath, int seasonNumber, Guid seriesId, int? episodeNumber)
+        public async Task<Episode> AddEpisode(string? title, string? description, DateTime? releaseDate, int seasonNumber, Guid seriesId, int? episodeNumber, string? posterPath, string? videoPath)
         {
             var newEpisode = new Episode();
 
@@ -78,6 +81,8 @@ namespace MyMDb.Services
 
             newEpisode.SeasonNumber = seasonNumber;
             newEpisode.SeriesId = seriesId;
+
+            newEpisode.Initialize();
 
             if (episodeNumber != null)
             {
@@ -104,12 +109,97 @@ namespace MyMDb.Services
                 newEpisode.SeasonNumber = seasonNumber;
                 newEpisode.EpisodeNumber = lastEpisodeNumber + episodeNumber;
                 newEpisode.PosterPath = series.PosterPath;
+                
+                newEpisode.Initialize();
 
                 newEpisode = await _MediaRepository.CreateEpisodeAsync(newEpisode);
+                
                 newEpisodes.Add(newEpisode);
             }
 
             return newEpisodes;
+        }
+
+        public async Task<Movie?> EditMovie(Guid id, Movie editedMovie)
+        {
+            var movieToEdit = await _MediaRepository.GetMovieByIdAsync(id);
+
+            if (movieToEdit == null) 
+            {
+                return null;
+            }
+
+            movieToEdit = editedMovie;
+
+            movieToEdit.UpdateDateModified();
+
+            await _MediaRepository.UpdateMovie(movieToEdit);
+
+            return movieToEdit;
+        }
+
+        public async Task<Series?> EditSeries(Guid id, Series editedSeries)
+        {
+            var seriesToEdit = await _MediaRepository.GetSeriesByIdAsync(id);
+
+            if (seriesToEdit == null)
+            {
+                return null;
+            }
+
+            seriesToEdit = editedSeries;
+
+            seriesToEdit.UpdateDateModified();
+
+            await _MediaRepository.UpdateSeries(seriesToEdit);
+
+            return seriesToEdit;
+        }
+
+        public async Task<Episode?> EditEpisode(Guid id, Episode editedEpisode)
+        {
+            var episodeToEdit = await _MediaRepository.GetEpisodeByIdAsync(id);
+
+            if (episodeToEdit == null)
+            {
+                return null;
+            }
+
+            episodeToEdit = editedEpisode;
+
+            episodeToEdit.UpdateDateModified();
+
+            await _MediaRepository.UpdateEpisode(episodeToEdit);
+
+            return episodeToEdit;
+        }
+
+        public async Task<bool> DeleteMedia(Guid id)
+        {
+            var mediaToDelete = await _MediaRepository.GetByIdAsync(id);
+            
+            if (mediaToDelete == null)
+            {
+                return false;
+            }
+            
+            await _MediaRepository.Delete(mediaToDelete);
+            return true;
+        }
+
+        public async Task<Movie?> GetMovieById(Guid id)
+        {
+            return await _MediaRepository.GetMovieByIdAsync(id);
+        }
+
+        public async Task<Series?> GetSeriesById(Guid id)
+        {
+            return await _MediaRepository.GetSeriesByIdAsync(id);
+        }
+
+        public async Task<Episode?> GetEpisodeById(Guid id)
+        {
+            return await _MediaRepository.GetEpisodeByIdAsync(id);
         }
     }
 }

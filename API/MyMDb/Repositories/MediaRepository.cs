@@ -67,21 +67,21 @@ namespace MyMDb.Repositories
         public async Task<Movie> CreateMovieAsync(Movie movie)
         {
             await _dbSet.AddAsync(movie);
-            await _context.SaveChangesAsync();
+            await SaveChangesAsync();
             return movie;
         }
 
         public async Task<Series> CreateSeriesAsync(Series series)
         {
             await _dbSet.AddAsync(series);
-            await _context.SaveChangesAsync();
+            await SaveChangesAsync();
             return series;
         }
 
         public async Task<Episode> CreateEpisodeAsync(Episode episode)
         {
             await _dbSet.AddAsync(episode);
-            await _context.SaveChangesAsync();
+            await SaveChangesAsync();
             return episode;
         }
 
@@ -91,6 +91,7 @@ namespace MyMDb.Repositories
                 .OfType<Episode>()
                 .Where(e => e.SeriesId == seriesId && e.SeasonNumber == seasonNumber)
                 .MaxAsync(e => e.EpisodeNumber);
+
             if (lastEpisodeNumer != null) 
             {
                 return lastEpisodeNumer.Value;
@@ -99,6 +100,48 @@ namespace MyMDb.Repositories
             {
                 return 0;
             }
+        }
+
+        public async Task<Movie?> GetMovieByIdAsync(Guid id)
+        {
+            return await _dbSet 
+                .OfType<Movie>()
+                .Where(m  => m.Id == id)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<Series?> GetSeriesByIdAsync(Guid id)
+        {
+            return await _dbSet
+                .OfType<Series>()
+                .Where(m => m.Id == id)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<Episode?> GetEpisodeByIdAsync(Guid id)
+        {
+            return await _dbSet
+                .OfType<Episode>()
+                .Where(m => m.Id == id)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task UpdateMovie(Movie movie)
+        {
+            _dbSet.Update(movie);
+            await SaveChangesAsync();
+        }
+
+        public async Task UpdateSeries(Series series)
+        {
+            _dbSet.Update(series);
+            await SaveChangesAsync();
+        }
+
+        public async Task UpdateEpisode(Episode episode)
+        {
+            _dbSet.Update(episode);
+            await SaveChangesAsync();
         }
     }
 }

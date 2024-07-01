@@ -1,9 +1,14 @@
-﻿namespace MyMDb.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace MyMDb.Models
 {
     public class Episode : Media
     {
+        [Required]
         public int? SeasonNumber { get; set; }
+        [Required]
         public int? EpisodeNumber { get; set; }
+        [Required]
         public Guid? SeriesId { get; set; }
         public virtual Series? Series { get; set; }
     }

@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using MyMDb.Models;
+﻿using MyMDb.Models;
 
 namespace MyMDb.RepositoryInterfaces
 {
@@ -16,8 +15,20 @@ namespace MyMDb.RepositoryInterfaces
         Task<ICollection<Movie>> GetAllMoviesAsync();
         Task<ICollection<Episode>> GetEpisodesBySeriesIdAsync(Guid seriesId);
 
+        // get by id
+        Task<Movie?> GetMovieByIdAsync(Guid id);
+
+        Task<Series?> GetSeriesByIdAsync(Guid id);
+
+        Task<Episode?> GetEpisodeByIdAsync(Guid id);
+
         // get reviews
         Task<ICollection<Review>> GetReviewsByIdAsync(Guid Id);
+
+        // update
+        Task UpdateMovie(Movie movie);
+        Task UpdateSeries(Series series);
+        Task UpdateEpisode(Episode episode);
 
         // others
         Task<double?> GetAverageReviewScoreAsync(Guid Id);

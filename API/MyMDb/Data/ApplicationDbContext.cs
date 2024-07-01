@@ -31,7 +31,7 @@ namespace MyMDb.Data
 
             // movie types (movie, series or episode)
             builder.Entity<Media>()
-           .HasDiscriminator<string>("Discriminator")
+           .HasDiscriminator<string>("MediaType")
            .HasValue<Movie>("Movie")
            .HasValue<Series>("Series")
            .HasValue<Episode>("Episode");
@@ -40,7 +40,8 @@ namespace MyMDb.Data
             builder.Entity<Series>()
                 .HasMany(s => s.Episodes)
                 .WithOne(e => e.Series)
-                .HasForeignKey(e => e.SeriesId);
+                .HasForeignKey(e => e.SeriesId) 
+                .OnDelete(DeleteBehavior.NoAction);
 
             // media - reviews
             builder.Entity<Media>()
@@ -49,7 +50,7 @@ namespace MyMDb.Data
             builder.Entity<Media>()
                 .HasMany(m => m.Reviews)
                 .WithOne(r => r.Media)
-                .HasForeignKey(m => m.MediaId);
+                .HasForeignKey(r => r.MediaId);
 
             // user - reviews
             builder.Entity<Review>()
