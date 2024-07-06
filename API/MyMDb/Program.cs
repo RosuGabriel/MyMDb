@@ -10,6 +10,7 @@ using MyMDb.Services;
 using System.Text.Json.Serialization;
 using MyMDb.Helpers;
 using Microsoft.AspNetCore.Http.Features;
+using Swashbuckle.AspNetCore.Filters;
 
 
 
@@ -30,7 +31,16 @@ builder.Services.AddControllers()
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey
+    });
+    options.OperationFilter<SecurityRequirementsOperationFilter>();
+});
 
 // Max dimension of file upload
 builder.Services.Configure<FormOptions>(options =>
@@ -50,24 +60,26 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Repositories
 builder.Services.AddScoped<IMediaRepository, MediaRepository>();
-builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 // Services
 builder.Services.AddScoped<IMediaService, MediaService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 
 // Add Identity
-builder.Services.AddIdentity<AppUser, IdentityRole>()
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddApiEndpoints()
-                .AddDefaultTokenProviders();
+builder.Services.AddIdentity<AppUser, IdentityRole>( options =>
+{
+    options.SignIn.RequireConfirmedAccount = false;
+})
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddApiEndpoints()
+.AddDefaultTokenProviders();
 
-// AutoMapper
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+builder.Services.AddAuthentication()
+    .AddBearerToken(IdentityConstants.BearerScheme);
 
-builder.Services.AddAuthentication().AddBearerToken(IdentityConstants.BearerScheme);
 builder.Services.AddAuthorizationBuilder();
 
 builder.Services.Configure<IdentityOptions>(options =>
@@ -75,6 +87,19 @@ builder.Services.Configure<IdentityOptions>(options =>
     // Configure Customize password requirements, lockout settings, etc.
 });
 
+// AutoMapper
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowMyReactClient",
+            builder =>
+            {
+                builder.WithOrigins("http://localhost:3000")
+                       .AllowAnyHeader()
+                       .AllowAnyMethod();
+            });
+});
 
 builder.Services.AddAuthorization();
 
@@ -82,6 +107,27 @@ builder.Services.AddAuthorization();
 
 // ------------------------------ App
 var app = builder.Build();
+
+using (var serviceScope = app.Services.CreateScope())
+{
+    var roleManager = serviceScope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+    // Define roles
+    var roles = new List<string> { "Admin", "User"};
+
+    foreach (var roleName in roles)
+    {
+        var roleExists = roleManager.RoleExistsAsync(roleName).Result;
+        if (!roleExists)
+        {
+            var result = roleManager.CreateAsync(new IdentityRole(roleName)).Result;
+            if (!result.Succeeded)
+            {
+                throw new Exception($"Error creating role '{roleName}': {result.Errors.FirstOrDefault()?.Description}");
+            }
+        }
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -92,8 +138,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 
 app.UseRouting();
+app.UseCors("AllowMyReactClient");
 
 app.UseAuthentication();
 app.UseAuthorization();

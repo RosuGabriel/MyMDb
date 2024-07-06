@@ -40,9 +40,10 @@ namespace MyMDb.Data
             builder.Entity<Series>()
                 .HasMany(s => s.Episodes)
                 .WithOne(e => e.Series)
-                .HasForeignKey(e => e.SeriesId) 
-                .OnDelete(DeleteBehavior.NoAction);
-
+                .HasForeignKey(e => e.SeriesId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Restrict);
+            
             // media - reviews
             builder.Entity<Media>()
                 .HasKey(m => m.Id);
@@ -50,7 +51,9 @@ namespace MyMDb.Data
             builder.Entity<Media>()
                 .HasMany(m => m.Reviews)
                 .WithOne(r => r.Media)
-                .HasForeignKey(r => r.MediaId);
+                .HasForeignKey(r => r.MediaId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
 
             // user - reviews
             builder.Entity<Review>()
@@ -59,7 +62,9 @@ namespace MyMDb.Data
             builder.Entity<Review>()
                 .HasOne(r => r.User)
                 .WithMany(u => u.Reviews)
-                .HasForeignKey(r => r.UserId);
+                .HasForeignKey(r => r.UserId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

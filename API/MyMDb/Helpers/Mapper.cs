@@ -4,9 +4,9 @@ using MyMDb.DTOs;
 
 namespace MyMDb.Helpers
 {
-    public class AutoMapper : Profile
+    public class Mapper : Profile
     {
-        public AutoMapper()
+        public Mapper()
         {
             CreateMap<Media, MediaDto>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));

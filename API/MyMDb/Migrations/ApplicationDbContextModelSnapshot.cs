@@ -222,7 +222,7 @@ namespace MyMDb.Migrations
 
             modelBuilder.Entity("MyMDb.Models.Media", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid?>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
@@ -263,7 +263,7 @@ namespace MyMDb.Migrations
 
             modelBuilder.Entity("MyMDb.Models.Review", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid?>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
@@ -277,12 +277,14 @@ namespace MyMDb.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<Guid?>("MediaId")
+                        .IsRequired()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<double?>("Rating")
                         .HasColumnType("float");
 
                     b.Property<string>("UserId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
@@ -296,7 +298,7 @@ namespace MyMDb.Migrations
 
             modelBuilder.Entity("MyMDb.Models.UserProfile", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid?>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
@@ -306,20 +308,20 @@ namespace MyMDb.Migrations
                     b.Property<DateTime?>("DateModified")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("ProfilePicPath")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("UserName")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("UserId")
-                        .IsUnique()
-                        .HasFilter("[UserId] IS NOT NULL");
+                        .IsUnique();
 
                     b.ToTable("UserProfiles");
                 });
@@ -329,15 +331,12 @@ namespace MyMDb.Migrations
                     b.HasBaseType("MyMDb.Models.Media");
 
                     b.Property<int?>("EpisodeNumber")
-                        .IsRequired()
                         .HasColumnType("int");
 
-                    b.Property<int?>("SeasonNumber")
-                        .IsRequired()
+                    b.Property<int>("SeasonNumber")
                         .HasColumnType("int");
 
-                    b.Property<Guid?>("SeriesId")
-                        .IsRequired()
+                    b.Property<Guid>("SeriesId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasIndex("SeriesId");
@@ -414,11 +413,15 @@ namespace MyMDb.Migrations
                 {
                     b.HasOne("MyMDb.Models.Media", "Media")
                         .WithMany("Reviews")
-                        .HasForeignKey("MediaId");
+                        .HasForeignKey("MediaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("MyMDb.Models.AppUser", "User")
                         .WithMany("Reviews")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Media");
 
@@ -429,7 +432,9 @@ namespace MyMDb.Migrations
                 {
                     b.HasOne("MyMDb.Models.AppUser", "User")
                         .WithOne("UserProfile")
-                        .HasForeignKey("MyMDb.Models.UserProfile", "UserId");
+                        .HasForeignKey("MyMDb.Models.UserProfile", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });
@@ -439,7 +444,7 @@ namespace MyMDb.Migrations
                     b.HasOne("MyMDb.Models.Series", "Series")
                         .WithMany("Episodes")
                         .HasForeignKey("SeriesId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Series");

@@ -7,7 +7,7 @@ namespace MyMDb.Models.Base
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public Guid Id { get; set; }
+        public Guid? Id { get; set; }
 
         public DateTime? DateCreated { get; set; }
 

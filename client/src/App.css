@@ -1,0 +1,23 @@
+#root {
+  background-color: #282c34;
+  color: white;
+  text-align: center;
+}
+
+.App-header {
+  background-color: #282c34;
+  color: white;
+}
+
+.main {
+}
+
+.media-card {
+  width: 200px; /* ajustați dimensiunea cardului */
+  height: auto;
+}
+
+.media-card-img {
+  width: 200px; /* ajustați dimensiunea imaginii */
+  height: auto;
+}

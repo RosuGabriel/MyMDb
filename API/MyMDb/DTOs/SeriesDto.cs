@@ -2,11 +2,8 @@
 
 namespace MyMDb.DTOs
 {
-    public class SeriesDto : BaseEntity
+    public class SeriesDto : MediaDto
     {
-        public string? Title { get; set; }
-        public string? Description { get; set; }
-        public DateTime? ReleaseDate { get; set; }
-        public string? PosterPath { get; set; }
+
     }
 }

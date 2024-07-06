@@ -1,4 +1,5 @@
-﻿using MyMDb.Models;
+﻿using MyMDb.DTOs;
+using MyMDb.Models;
 
 namespace MyMDb.ServiceInterfaces
 {
@@ -17,10 +18,10 @@ namespace MyMDb.ServiceInterfaces
         Task<Episode?> GetEpisodeById(Guid id);
 
         // adding
-        Task<Movie> AddMovie(string? title, string? description, DateTime? releaseDate, string? posterPath, string? videoPath);
-        Task<Series> AddSeries(string? title, string? description, DateTime? releaseDate, string? posterPath);
-        Task<Episode> AddEpisode(string? title, string? description, DateTime? releaseDate, int seasonNumber, Guid seriesId, int? episodeNumber, string? posterPath, string? videoPath);
-        Task<ICollection<Episode>> AddManyEpisodesToASeries(Guid seriesId, int seasonNumber, int episodesNumber);
+        Task<Movie> AddMovie(Movie movie);
+        Task<Series> AddSeries(Series series);
+        Task<Episode> AddEpisode(Episode episode);
+        Task<ICollection<Episode>> AddManyEpisodesToASeries(Guid seriesId, int seasonNumber, int episodesNumber, string? posterPath);
 
         // editing
         Task<Movie?> EditMovie(Guid id, Movie editedMovie);

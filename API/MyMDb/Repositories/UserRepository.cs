@@ -12,10 +12,24 @@ namespace MyMDb.Repositories
 
         }
 
-        public async Task<UserProfile?> GetProfileByIdAsync(string Id)
+        public async Task<UserProfile> AddProfileAsync(UserProfile profile)
+        {
+            _context.UserProfiles.Add(profile);
+            await SaveChangesAsync();
+            return profile;
+        }
+
+        public async Task<UserProfile?> GetProfileByUserIdAsync(string Id)
         {
             return await _context.UserProfiles
                 .FirstOrDefaultAsync(p => p.UserId == Id);
+        }
+
+        public async Task<UserProfile?> UpdateProfileAsync(UserProfile profile)
+        {
+            _context.Entry(profile).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            return profile;
         }
     }
 }

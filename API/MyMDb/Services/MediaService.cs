@@ -1,4 +1,5 @@
 ﻿using MyMDb.RepositoryInterfaces;
+using MyMDb.Data;
 using MyMDb.Models;
 using MyMDb.ServiceInterfaces;
 
@@ -40,75 +41,50 @@ namespace MyMDb.Services
         }
 
         // adding
-        public async Task<Movie> AddMovie(string? title, string? description, DateTime? releaseDate, string? posterPath, string? videoPath)
+        public async Task<Movie> AddMovie(Movie movie)
         {
-            var newMovie = new Movie();
-
-            newMovie.Title = title;
-            newMovie.Description = description;
-            newMovie.ReleaseDate = releaseDate;
-            newMovie.PosterPath = posterPath;
-            newMovie.VideoPath = videoPath;
+            var newMovie = movie;
 
             newMovie.Initialize();
 
             return await _MediaRepository.CreateMovieAsync(newMovie);
         }
 
-        public async Task<Series> AddSeries(string? title, string? description, DateTime? releaseDate, string? posterPath)
+        public async Task<Series> AddSeries(Series series)
         {
-            var newSeries = new Series();
-
-            newSeries.Title = title;
-            newSeries.Description = description;
-            newSeries.ReleaseDate = releaseDate;
-            newSeries.PosterPath = posterPath;
+            var newSeries = series;
 
             newSeries.Initialize();
 
             return await _MediaRepository.CreateSeriesAsync(newSeries);
         }
 
-        public async Task<Episode> AddEpisode(string? title, string? description, DateTime? releaseDate, int seasonNumber, Guid seriesId, int? episodeNumber, string? posterPath, string? videoPath)
+        public async Task<Episode> AddEpisode(Episode episode)
         {
-            var newEpisode = new Episode();
-
-            newEpisode.Title = title;
-            newEpisode.Description = description;
-            newEpisode.ReleaseDate = releaseDate;
-            newEpisode.PosterPath = posterPath;
-            newEpisode.VideoPath = videoPath;
-
-            newEpisode.SeasonNumber = seasonNumber;
-            newEpisode.SeriesId = seriesId;
+            var newEpisode = episode;
 
             newEpisode.Initialize();
 
-            if (episodeNumber != null)
+            if (newEpisode.EpisodeNumber == null)
             {
-                newEpisode.EpisodeNumber = episodeNumber;
-            }
-            else
-            {
-                newEpisode.EpisodeNumber = await _MediaRepository.GetLastEpisodeOfASeasonAsync(seriesId, seasonNumber) + 1;
+                newEpisode.EpisodeNumber = await _MediaRepository.GetLastEpisodeOfASeasonAsync(episode.SeriesId, episode.SeasonNumber) + 1;
             }
 
             return await _MediaRepository.CreateEpisodeAsync(newEpisode);
         }
 
-        public async Task<ICollection<Episode>> AddManyEpisodesToASeries(Guid seriesId, int seasonNumber, int episodesNumber)
+        public async Task<ICollection<Episode>> AddManyEpisodesToASeries(Guid seriesId, int seasonNumber, int episodesNumber, string? posterPath)
         {
             var lastEpisodeNumber = await _MediaRepository.GetLastEpisodeOfASeasonAsync(seriesId, seasonNumber);
             var newEpisodes = new List<Episode>();
-            var series = await _MediaRepository.GetByIdAsync(seriesId);
-
-            for(var episodeNumber = 1;  episodeNumber <= episodesNumber; episodeNumber++)
+            
+            for (var episodeNumber = 1;  episodeNumber <= episodesNumber; episodeNumber++)
             {
                 var newEpisode = new Episode();
                 newEpisode.SeriesId = seriesId;
                 newEpisode.SeasonNumber = seasonNumber;
                 newEpisode.EpisodeNumber = lastEpisodeNumber + episodeNumber;
-                newEpisode.PosterPath = series.PosterPath;
+                newEpisode.PosterPath = posterPath;
                 
                 newEpisode.Initialize();
 
@@ -182,8 +158,18 @@ namespace MyMDb.Services
             {
                 return false;
             }
-            
+            // daca e posterul default de facut sa nu se stearga
+            if (System.IO.File.Exists(Paths.Root + mediaToDelete.PosterPath))
+            {
+                System.IO.File.Delete(Paths.Root + mediaToDelete.PosterPath);
+            }
+            if (System.IO.File.Exists(Paths.Root + mediaToDelete.VideoPath))
+            {
+                System.IO.File.Delete(Paths.Root + mediaToDelete.VideoPath);
+            }
+
             await _MediaRepository.Delete(mediaToDelete);
+
             return true;
         }
 
