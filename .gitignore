@@ -398,4 +398,4 @@ FodyWeavers.xsd
 *.sln.iml
 
 # root dir
-/wwwroot/
+wwwroot/
