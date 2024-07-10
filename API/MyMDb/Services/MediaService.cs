@@ -158,15 +158,17 @@ namespace MyMDb.Services
             {
                 return false;
             }
-            // daca e posterul default de facut sa nu se stearga
-            if (System.IO.File.Exists(Paths.Root + mediaToDelete.PosterPath))
-            {
-                System.IO.File.Delete(Paths.Root + mediaToDelete.PosterPath);
-            }
-            if (System.IO.File.Exists(Paths.Root + mediaToDelete.VideoPath))
-            {
-                System.IO.File.Delete(Paths.Root + mediaToDelete.VideoPath);
-            }
+
+            // sterge poster si video odata cu movie
+            //// daca e posterul default de facut sa nu se stearga
+            //if (System.IO.File.Exists(Paths.Root + mediaToDelete.PosterPath))
+            //{
+            //    System.IO.File.Delete(Paths.Root + mediaToDelete.PosterPath);
+            //}
+            //if (System.IO.File.Exists(Paths.Root + mediaToDelete.VideoPath))
+            //{
+            //    System.IO.File.Delete(Paths.Root + mediaToDelete.VideoPath);
+            //}
 
             await _MediaRepository.Delete(mediaToDelete);
 
