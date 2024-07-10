@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using MyMDb.Models;
 using System.Reflection.Emit;
@@ -19,6 +20,52 @@ namespace MyMDb.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            var adminRole = new IdentityRole
+            {
+                Name = "admin",
+                NormalizedName = "ADMIN"
+            };
+
+            var userRole = new IdentityRole
+            {
+                Name = "user",
+                NormalizedName = "USER"
+            };
+
+            builder.Entity<IdentityRole>().HasData(adminRole, userRole);
+
+            // Crează utilizatorul admin
+            var adminUser = new AppUser
+            {
+                UserName = "admin",
+                NormalizedUserName = "ADMIN",
+                Email = "secret",
+                NormalizedEmail = "secret",
+                EmailConfirmed = true,
+                SecurityStamp = Guid.NewGuid().ToString("D"),
+                PasswordHash = new PasswordHasher<AppUser>().HashPassword(null, "secret")
+            };
+
+            builder.Entity<AppUser>().HasData(adminUser);
+
+            var adminUserRoles = new List<IdentityUserRole<string>>
+        {
+            new IdentityUserRole<string>
+            {
+                UserId = adminUser.Id,
+                RoleId = adminRole.Id
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = adminUser.Id,
+                RoleId = userRole.Id
+            }
+        };
+
+            builder.Entity<IdentityUserRole<string>>().HasData(adminUserRoles);
+
+
 
             // user - user profile
             builder.Entity<UserProfile>()

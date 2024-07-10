@@ -47,6 +47,20 @@ namespace MyMDb.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "2a70329c-30b8-4460-93b3-db26ac403ea3",
+                            Name = "admin",
+                            NormalizedName = "ADMIN"
+                        },
+                        new
+                        {
+                            Id = "2c120a04-a7d8-4462-a4be-e7ea10c4c51d",
+                            Name = "user",
+                            NormalizedName = "USER"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -134,6 +148,18 @@ namespace MyMDb.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = "2f0c79c2-5c0b-4209-853a-0ceba79025b2",
+                            RoleId = "2a70329c-30b8-4460-93b3-db26ac403ea3"
+                        },
+                        new
+                        {
+                            UserId = "2f0c79c2-5c0b-4209-853a-0ceba79025b2",
+                            RoleId = "2c120a04-a7d8-4462-a4be-e7ea10c4c51d"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
@@ -218,6 +244,24 @@ namespace MyMDb.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "2f0c79c2-5c0b-4209-853a-0ceba79025b2",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "f0f149dc-5ac2-4d12-9fb3-961fab83bd6b",
+                            Email = "secret",
+                            EmailConfirmed = true,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "secret",
+                            NormalizedUserName = "ADMIN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEB0qzUeInjfNULjqsTdCQ3MDXh+h0I863cJXkHaWiiOXjk0GTAuSV/v5LLOf0j/wuw==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "47041061-6e83-407f-b18b-a3aae21664f2",
+                            TwoFactorEnabled = false,
+                            UserName = "admin"
+                        });
                 });
 
             modelBuilder.Entity("MyMDb.Models.Media", b =>
@@ -247,6 +291,7 @@ namespace MyMDb.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Title")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("VideoPath")

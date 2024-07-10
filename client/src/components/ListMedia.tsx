@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Media } from "../Models";
+import { Media, API_URL } from "../Data";
+import { useNavigate } from "react-router";
 import { fetchMedia, fetchMovies, fetchSeries } from "../services/MediaService";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../App.css"; // Importăm fișierul CSS pentru stiluri suplimentare
 
 const ListMedia: React.FC = () => {
   const [mediaType, setMediaType] = useState<"movies" | "series" | "all">(
-    "all"
+    "movies"
   );
   const [media, setMedia] = useState<Media[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchMediaList = async () => {
@@ -22,6 +24,11 @@ const ListMedia: React.FC = () => {
         fetchedMedia = await fetchSeries();
       }
 
+      fetchedMedia = fetchedMedia.map((m) => ({
+        ...m,
+        posterPath: m.posterPath ? API_URL + m.posterPath : "film.png",
+      }));
+
       setMedia(fetchedMedia);
     };
 
@@ -32,30 +39,30 @@ const ListMedia: React.FC = () => {
     setMediaType(type);
   };
 
+  const handleClick = (mediaId: string) => {
+    navigate("/media/" + mediaId);
+  };
+
   return (
-    <>
-      <div className="btn-group mb-3" role="group">
+    <div className="media-page">
+      <div className="btn-group p-3 mb-3 media-buttons" role="group">
         <button
           type="button"
-          className={`btn btn-primary ${
-            mediaType === "movies" ? "active" : ""
-          }`}
+          className={`btn btn-dark ${mediaType === "movies" ? "active" : ""}`}
           onClick={() => handleMediaTypeChange("movies")}
         >
           Movies
         </button>
         <button
           type="button"
-          className={`btn btn-primary ${
-            mediaType === "series" ? "active" : ""
-          }`}
+          className={`btn btn-dark ${mediaType === "series" ? "active" : ""}`}
           onClick={() => handleMediaTypeChange("series")}
         >
           Series
         </button>
         <button
           type="button"
-          className={`btn btn-primary ${mediaType === "all" ? "active" : ""}`}
+          className={`btn btn-dark ${mediaType === "all" ? "active" : ""}`}
           onClick={() => handleMediaTypeChange("all")}
         >
           All
@@ -64,15 +71,17 @@ const ListMedia: React.FC = () => {
       <div className="container">
         <div className="row">
           {media.map((m) => (
-            <div className="col-sm-6 col-md-4 col-lg-3 mb-4" key={m.id}>
-              <div className="card media-card">
-                {m.posterPath && (
-                  <img
-                    src={"https://localhost:7292/" + m.posterPath}
-                    alt={m.title}
-                    className="card-img-top media-card-img"
-                  />
-                )}
+            <div
+              className="col-sm-6 col-md-4 col-lg-3 mb-4"
+              key={m.id}
+              onClick={() => handleClick(m.id)}
+            >
+              <div className="card media-card btn btn-dark">
+                <img
+                  src={m.posterPath}
+                  alt={m.title}
+                  className="card-img-top media-card-img"
+                />
                 <div className="card-body">
                   <h5 className="card-title">{m.title}</h5>
                 </div>
@@ -81,7 +90,7 @@ const ListMedia: React.FC = () => {
           ))}
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

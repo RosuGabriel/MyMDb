@@ -1,12 +1,11 @@
-import axios from "axios";
-import { Media } from "../Models";
+import { Media, axiosInstance } from "../Data";
 
-const BASE_URL = "https://localhost:7292/api/media/";
+const MEDIA_URL = "media/";
 
 export const fetchMedia = async (): Promise<Media[]> => {
   try {
-    const response = await axios.get<{ $values: Media[] }>(
-      BASE_URL + "movies_and_series"
+    const response = await axiosInstance.get<{ $values: Media[] }>(
+      MEDIA_URL + "movies_and_series"
     );
     return response.data.$values;
   } catch (error) {
@@ -17,7 +16,9 @@ export const fetchMedia = async (): Promise<Media[]> => {
 
 export const fetchMovies = async (): Promise<Media[]> => {
   try {
-    const response = await axios.get<{ $values: Media[] }>(BASE_URL + "movies");
+    const response = await axiosInstance.get<{ $values: Media[] }>(
+      MEDIA_URL + "movies"
+    );
     return response.data.$values;
   } catch (error) {
     console.error("Error fetching movies:", error);
@@ -27,7 +28,9 @@ export const fetchMovies = async (): Promise<Media[]> => {
 
 export const fetchSeries = async (): Promise<Media[]> => {
   try {
-    const response = await axios.get<{ $values: Media[] }>(BASE_URL + "series");
+    const response = await axiosInstance.get<{ $values: Media[] }>(
+      MEDIA_URL + "series"
+    );
     return response.data.$values;
   } catch (error) {
     console.error("Error fetching series:", error);
@@ -36,7 +39,7 @@ export const fetchSeries = async (): Promise<Media[]> => {
 };
 
 export const fetchMediaById = async (id: string): Promise<Media> => {
-  const response = await axios.get(BASE_URL + id);
+  const response = await axiosInstance.get(MEDIA_URL + id);
   return response.data;
 };
 
@@ -69,13 +72,26 @@ export const createMovie = async (
   }
 
   try {
-    const response = await axios.post<Media>(BASE_URL + "add_movie", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    const response = await axiosInstance.post<Media>(
+      MEDIA_URL + "add_movie",
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
 
     return response.data;
   } catch (error) {
     console.error("Error creating movie:", error);
+    throw error;
+  }
+};
+
+export const deleteMedia = async (id: string): Promise<void> => {
+  try {
+    await axiosInstance.delete(MEDIA_URL + "delete_media/" + id);
+  } catch (error) {
+    console.error("Error deleting media:", error);
     throw error;
   }
 };

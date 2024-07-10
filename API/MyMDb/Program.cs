@@ -8,9 +8,11 @@ using MyMDb.RepositoryInterfaces;
 using MyMDb.ServiceInterfaces;
 using MyMDb.Services;
 using System.Text.Json.Serialization;
-using MyMDb.Helpers;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Http.Features;
 using Swashbuckle.AspNetCore.Filters;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Text;
 
 
 
@@ -29,17 +31,36 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.WriteIndented = true;
     });
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+// Configure Swagger OpenApi
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        In = ParameterLocation.Header,
+        Description = @"JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.",
         Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer"
     });
-    options.OperationFilter<SecurityRequirementsOperationFilter>();
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+{
+    {
+        new OpenApiSecurityScheme
+        {
+            Reference = new OpenApiReference
+            {
+                Type = ReferenceType.SecurityScheme,
+                Id = "Bearer"
+            },
+            Scheme = "Bearer",
+            Name = "Bearer",
+            In = ParameterLocation.Header,
+        },
+        new List<string>()
+    }
+});
 });
 
 // Max dimension of file upload
@@ -77,10 +98,42 @@ builder.Services.AddIdentity<AppUser, IdentityRole>( options =>
 .AddApiEndpoints()
 .AddDefaultTokenProviders();
 
-builder.Services.AddAuthentication()
-    .AddBearerToken(IdentityConstants.BearerScheme);
+var keyString = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrEmpty(keyString))
+{
+    throw new InvalidOperationException("JWT key is not configured.");
+}
 
-builder.Services.AddAuthorizationBuilder();
+var key = Encoding.ASCII.GetBytes(keyString);
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+    .AddJwtBearer(options =>
+    {
+        options.RequireHttpsMetadata = false;
+        options.SaveToken = true;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Issuer"],
+            IssuerSigningKey = new SymmetricSecurityKey(key)
+        };
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("admin", policy =>
+        policy.RequireRole("admin"));
+
+    options.AddPolicy("user", policy =>
+        policy.RequireRole("user"));
+});
 
 builder.Services.Configure<IdentityOptions>(options =>
 {
@@ -101,33 +154,11 @@ builder.Services.AddCors(options =>
             });
 });
 
-builder.Services.AddAuthorization();
-
+builder.Services.AddLogging();
 
 
 // ------------------------------ App
 var app = builder.Build();
-
-using (var serviceScope = app.Services.CreateScope())
-{
-    var roleManager = serviceScope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-
-    // Define roles
-    var roles = new List<string> { "Admin", "User"};
-
-    foreach (var roleName in roles)
-    {
-        var roleExists = roleManager.RoleExistsAsync(roleName).Result;
-        if (!roleExists)
-        {
-            var result = roleManager.CreateAsync(new IdentityRole(roleName)).Result;
-            if (!result.Succeeded)
-            {
-                throw new Exception($"Error creating role '{roleName}': {result.Errors.FirstOrDefault()?.Description}");
-            }
-        }
-    }
-}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
