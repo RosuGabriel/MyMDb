@@ -1,9 +1,9 @@
 import axios, { AxiosInstance } from "axios";
 
-export const API_URL = "https://localhost:7292/api/";
+export const API_URL = "https://localhost:7292/";
 
 export let axiosInstance: AxiosInstance = axios.create({
-  baseURL: API_URL,
+  baseURL: API_URL + "api/",
 });
 
 export const setAxiosInterceptors = () => {
@@ -55,4 +55,10 @@ export interface Creditentials {
   role: string;
   exp: number;
   token: string;
+}
+
+export interface userProfile {
+  userId: string;
+  userName: string;
+  profilePicPath: string;
 }

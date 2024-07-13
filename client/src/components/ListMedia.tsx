@@ -3,7 +3,7 @@ import { Media, API_URL } from "../Data";
 import { useNavigate } from "react-router";
 import { fetchMedia, fetchMovies, fetchSeries } from "../services/MediaService";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "../App.css"; // Importăm fișierul CSS pentru stiluri suplimentare
+import "../App.css";
 
 const ListMedia: React.FC = () => {
   const [mediaType, setMediaType] = useState<"movies" | "series" | "all">(
@@ -76,7 +76,7 @@ const ListMedia: React.FC = () => {
               key={m.id}
               onClick={() => handleClick(m.id)}
             >
-              <div className="card media-card btn btn-dark">
+              <div className="card media-card btn btn-dark text-white">
                 <img
                   src={m.posterPath}
                   alt={m.title}

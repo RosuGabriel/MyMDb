@@ -100,7 +100,10 @@ const generateUniqueFileName = async (
   title: string,
   file: File
 ): Promise<string> => {
-  const extension = getFileExtension(file.name);
+  let extension = getFileExtension(file.name);
+  if (extension == "mkv") {
+    extension = "mp4";
+  }
   //const baseName = file.name.replace(`.${extension}`, "");
   //const timestamp = Date.now();
   const uniqueFileName = `${title}.${extension}`;

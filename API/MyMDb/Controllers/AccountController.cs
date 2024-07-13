@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using MyMDb.Data;
 using MyMDb.DTOs;
 using MyMDb.Models;
 using MyMDb.ServiceInterfaces;
@@ -18,14 +20,18 @@ namespace MyMDb.Controllers
         private readonly IUserService _userService;
         private readonly UserManager<AppUser> _userManager;
         private readonly SignInManager<AppUser> _signInManager;
+        private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public AccountController(IUserService userService, UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IConfiguration configuration)
+        public AccountController(IUserService userService, UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IConfiguration configuration, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _userService = userService;
             _userManager = userManager;
             _signInManager = signInManager;
             _configuration = configuration;
+            _mapper = mapper;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         [HttpPost]
@@ -37,10 +43,25 @@ namespace MyMDb.Controllers
                 return BadRequest(ModelState);
             }
 
+            if (userDto.Email == null)
+            {
+                return BadRequest("No email provided for the user");
+            }
+
+            if (userDto.Password == null)
+            {
+                return BadRequest("No password provided for the user");
+            }
+
+            if (await _userManager.FindByEmailAsync(userDto.Email) != null)
+            {
+                return BadRequest("There is already an user with this email");
+            }
+
             var user = new AppUser { UserName = userDto.Email, Email = userDto.Email};
             var result = await _userManager.CreateAsync(user, userDto.Password);
 
-            if (!result.Succeeded) 
+            if (!result.Succeeded)
             {
                 foreach (var error in result.Errors) 
                 {
@@ -60,7 +81,105 @@ namespace MyMDb.Controllers
                 }
             }
 
+            var userProfile = new UserProfile();
+            userProfile.UserId = user.Id;
+            
+            userProfile = await _userService.CreateUserProfileAsync(userProfile);
+            
+            if (userProfile == null)
+            {
+                return BadRequest("Unknown error creating profile");
+            }
+
             return Ok(new { Result = "User created successfully" });
+        }
+
+        [HttpGet]
+        [Route("profile")]
+        public async Task<IActionResult> GetProfile()
+        {
+            if (_httpContextAccessor.HttpContext == null)
+            {
+                return NotFound();
+            }
+
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+            {
+                return BadRequest();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var userProfile = await _userService.GetUserProfileAsync(userId);
+
+            if (userProfile == null) 
+            { 
+                return NotFound();
+            }
+
+            return Ok(userProfile);
+        }
+
+        [HttpPost]
+        [Authorize]
+        [Route("edit_profile")]
+        public async Task<IActionResult> EditProfile([FromForm] ProfileDto userProfile, IFormFile? profilePic)
+        {
+            if (_httpContextAccessor.HttpContext == null)
+            {
+                return Forbid();
+            }
+
+            var loggedInUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (!ModelState.IsValid) 
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (loggedInUserId != userProfile.UserId || loggedInUserId == null)
+            {
+                return Forbid();
+            }
+
+            var user = await _userService.GetUserProfileAsync(loggedInUserId);
+            if (user == null) 
+            {
+                return NotFound();
+            }
+
+            if (profilePic != null) 
+            {
+                if (!Extensions.IsImageFile(profilePic.FileName))
+                {
+                    return BadRequest("Not an image file provided.");
+                }
+                if(userProfile.ProfilePicPath == null)
+                {
+                    return BadRequest("No path provided for profile pic");
+                }
+
+                userProfile.ProfilePicPath = Paths.ProfilePath + userProfile.ProfilePicPath;
+                Console.WriteLine("\n\n" + userProfile.ProfilePicPath + "\n\n");
+                using (var stream = new FileStream(Paths.Root + userProfile.ProfilePicPath, FileMode.Create))
+                {
+                    await profilePic.CopyToAsync(stream);
+                }
+            }
+
+            var updatedProfile = await _userService.EditUserProfileAsync(loggedInUserId, userProfile);
+            
+            if (updatedProfile == null)
+            {
+                return BadRequest("Profile editing failed");
+            }
+
+            return Ok(updatedProfile);
         }
 
         [HttpPost]
@@ -70,6 +189,11 @@ namespace MyMDb.Controllers
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
+            }
+
+            if (userDto.Email == null || userDto.Password == null)
+            {
+                return NotFound();
             }
 
             var user = await _userManager.FindByEmailAsync(userDto.Email);

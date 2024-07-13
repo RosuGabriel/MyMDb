@@ -21,6 +21,8 @@ namespace MyMDb.Data
         {
             base.OnModelCreating(builder);
 
+            // admin and roles seeding
+
             var adminRole = new IdentityRole
             {
                 Name = "admin",

@@ -36,7 +36,6 @@ const ShowMedia: React.FC<ShowMediaProps> = ({ mediaId }) => {
         media.mediaType == "Series" ? (
           <>
             <ShowSeries {...media} />
-
             <br />
             <br />
             <button
@@ -52,14 +51,19 @@ const ShowMedia: React.FC<ShowMediaProps> = ({ mediaId }) => {
         ) : (
           <>
             <ShowMovieOrEpisode {...media} />
-
             <br />
             <br />
             <button
               className="btn btn-danger my-3"
               onClick={() => {
-                deleteMedia(media.id);
-                navigate("/media");
+                const userConfirmed = window.confirm(
+                  "Are you sure you want to delete this media?"
+                );
+
+                if (userConfirmed) {
+                  deleteMedia(media.id);
+                  navigate("/media");
+                }
               }}
             >
               Delete Media

@@ -28,8 +28,15 @@ namespace MyMDb.Repositories
         public async Task<UserProfile?> UpdateProfileAsync(UserProfile profile)
         {
             _context.Entry(profile).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+            await SaveChangesAsync();
             return profile;
+        }
+
+        public async Task<AppUser> UpdateUserAsync(AppUser user)
+        {
+            _context.Entry(user).State = EntityState.Modified;
+            await SaveChangesAsync();
+            return user;
         }
     }
 }
