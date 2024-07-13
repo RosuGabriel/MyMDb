@@ -7,5 +7,7 @@
         public static readonly string ImagesPath = "media\\images\\";
 
         public static readonly string VideosPath = "media\\videos\\";
+
+        public static readonly string ProfilePath = "profile_pics\\";
     }
 }

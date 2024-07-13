@@ -135,7 +135,6 @@ namespace MyMDb.Controllers
                 {
                     await poster.CopyToAsync(stream);
                 }
-
             }
 
             if (video != null)

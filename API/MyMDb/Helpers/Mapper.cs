@@ -27,6 +27,10 @@ namespace MyMDb.Helpers
 
             CreateMap<AppUser, UserDto>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
             CreateMap<UserDto, AppUser>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+
+            CreateMap<UserProfile, ProfileDto>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+            CreateMap<ProfileDto, UserProfile>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
         }
     }
 }

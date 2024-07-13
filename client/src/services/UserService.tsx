@@ -1,6 +1,11 @@
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
-import { Creditentials, axiosInstance, setAxiosInterceptors } from "../Data";
+import {
+  Creditentials,
+  axiosInstance,
+  setAxiosInterceptors,
+  userProfile,
+} from "../Data";
 
 export const register = async (email: string, password: string) => {
   const user = { email, password };
@@ -36,7 +41,7 @@ export const login = async (
     if (remember) {
       saveTokenLocal(creditentials);
     } else {
-      savetokenSession(creditentials);
+      saveTokenSession(creditentials);
     }
     window.dispatchEvent(new Event("authChange"));
     console.log("User logged in:", creditentials);
@@ -87,6 +92,30 @@ const saveTokenLocal = (creditentials: Creditentials) => {
   localStorage.setItem("creditentials", JSON.stringify(creditentials));
 };
 
-const savetokenSession = (creditentials: Creditentials) => {
+const saveTokenSession = (creditentials: Creditentials) => {
   sessionStorage.setItem("creditentials", JSON.stringify(creditentials));
+};
+
+export const fetchProfile = async (): Promise<userProfile> => {
+  try {
+    const response = await axiosInstance.get("user/profile");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    throw error;
+  }
+};
+
+export const updateProfile = async (formData: FormData) => {
+  try {
+    const response = await axiosInstance.post("user/edit_profile", formData);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating user profile:", error);
+    throw error;
+  }
+};
+
+export const getExtension = (filename: string): string => {
+  return "." + filename.split(".").pop();
 };
