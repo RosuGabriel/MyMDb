@@ -1,6 +1,8 @@
-﻿namespace MyMDb.RepositoryInterfaces
+﻿using MyMDb.Models;
+
+namespace MyMDb.RepositoryInterfaces
 {
-    public interface IReviewRepository
+    public interface IReviewRepository : IRepository<Review>
     {
     }
 }

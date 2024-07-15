@@ -38,11 +38,15 @@ export interface Media {
   videoPath: string;
   episodeNumber: number;
   seasonNumber: number;
-  reviews: Review[];
+  seasons: number;
+  series: Media;
+  episodes: { $values: Media[] };
+  reviews: { $values: Review[] };
 }
 
 export interface Review {
   id: string;
+  user: userProfile;
   createDate: Date;
   modifiedDate: Date;
   rating: number;

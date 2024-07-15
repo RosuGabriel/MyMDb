@@ -1,5 +1,4 @@
 ﻿using MyMDb.RepositoryInterfaces;
-using MyMDb.Data;
 using MyMDb.Models;
 using MyMDb.ServiceInterfaces;
 
@@ -96,6 +95,8 @@ namespace MyMDb.Services
             return newEpisodes;
         }
 
+        // editing
+
         public async Task<Movie?> EditMovie(Guid id, Movie editedMovie)
         {
             var movieToEdit = await _MediaRepository.GetMovieByIdAsync(id);
@@ -150,6 +151,8 @@ namespace MyMDb.Services
             return episodeToEdit;
         }
 
+        // removing
+
         public async Task<bool> DeleteMedia(Guid id)
         {
             var mediaToDelete = await _MediaRepository.GetByIdAsync(id);
@@ -174,6 +177,8 @@ namespace MyMDb.Services
 
             return true;
         }
+
+        // getting by id
 
         public async Task<Movie?> GetMovieById(Guid id)
         {

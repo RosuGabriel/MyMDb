@@ -107,6 +107,8 @@ namespace MyMDb.Repositories
             return await _dbSet 
                 .OfType<Movie>()
                 .Where(m  => m.Id == id)
+                .Include(m => m.Reviews!)
+                .ThenInclude(r => r.UserProfile)
                 .FirstOrDefaultAsync();
         }
 
@@ -114,7 +116,10 @@ namespace MyMDb.Repositories
         {
             return await _dbSet
                 .OfType<Series>()
-                .Where(m => m.Id == id)
+                .Where(s => s.Id == id)
+                .Include(s => s.Episodes)
+                .Include(s => s.Reviews!)
+                .ThenInclude(r => r.UserProfile)
                 .FirstOrDefaultAsync();
         }
 
@@ -122,7 +127,10 @@ namespace MyMDb.Repositories
         {
             return await _dbSet
                 .OfType<Episode>()
-                .Where(m => m.Id == id)
+                .Where(e => e.Id == id)
+                .Include(e => e.Series)
+                .Include(e => e.Reviews!)
+                .ThenInclude(r => r.UserProfile)
                 .FirstOrDefaultAsync();
         }
 

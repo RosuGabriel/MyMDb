@@ -7,7 +7,7 @@ import "../App.css";
 
 const ListMedia: React.FC = () => {
   const [mediaType, setMediaType] = useState<"movies" | "series" | "all">(
-    "movies"
+    "all"
   );
   const [media, setMedia] = useState<Media[]>([]);
   const navigate = useNavigate();
@@ -48,6 +48,13 @@ const ListMedia: React.FC = () => {
       <div className="btn-group p-3 mb-3 media-buttons" role="group">
         <button
           type="button"
+          className={`btn btn-dark ${mediaType === "all" ? "active" : ""}`}
+          onClick={() => handleMediaTypeChange("all")}
+        >
+          All
+        </button>
+        <button
+          type="button"
           className={`btn btn-dark ${mediaType === "movies" ? "active" : ""}`}
           onClick={() => handleMediaTypeChange("movies")}
         >
@@ -59,13 +66,6 @@ const ListMedia: React.FC = () => {
           onClick={() => handleMediaTypeChange("series")}
         >
           Series
-        </button>
-        <button
-          type="button"
-          className={`btn btn-dark ${mediaType === "all" ? "active" : ""}`}
-          onClick={() => handleMediaTypeChange("all")}
-        >
-          All
         </button>
       </div>
       <div className="container">

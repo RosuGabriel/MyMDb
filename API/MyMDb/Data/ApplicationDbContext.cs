@@ -37,7 +37,6 @@ namespace MyMDb.Data
 
             builder.Entity<IdentityRole>().HasData(adminRole, userRole);
 
-            // Crează utilizatorul admin
             var adminUser = new AppUser
             {
                 UserName = "admin",
@@ -46,7 +45,7 @@ namespace MyMDb.Data
                 NormalizedEmail = "secret",
                 EmailConfirmed = true,
                 SecurityStamp = Guid.NewGuid().ToString("D"),
-                PasswordHash = new PasswordHasher<AppUser>().HashPassword(null, "secret")
+                PasswordHash = new PasswordHasher<AppUser>().HashPassword(null!, "secret")
             };
 
             builder.Entity<AppUser>().HasData(adminUser);
@@ -71,7 +70,7 @@ namespace MyMDb.Data
 
             // user - user profile
             builder.Entity<UserProfile>()
-                .HasKey(p => p.Id);
+                .HasKey(p => p.UserId);
 
             builder.Entity<UserProfile>()
                 .HasOne(p => p.User)
@@ -109,7 +108,7 @@ namespace MyMDb.Data
                 .HasKey(r => r.Id);
 
             builder.Entity<Review>()
-                .HasOne(r => r.User)
+                .HasOne(r => r.UserProfile)
                 .WithMany(u => u.Reviews)
                 .HasForeignKey(r => r.UserId)
                 .IsRequired()

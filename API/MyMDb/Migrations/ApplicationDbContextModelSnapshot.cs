@@ -51,13 +51,13 @@ namespace MyMDb.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "2a70329c-30b8-4460-93b3-db26ac403ea3",
+                            Id = "f8dc08db-2339-4d50-ad8e-4672a8585dd7",
                             Name = "admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "2c120a04-a7d8-4462-a4be-e7ea10c4c51d",
+                            Id = "fa7f166e-0254-494b-bfeb-e5110fe35e90",
                             Name = "user",
                             NormalizedName = "USER"
                         });
@@ -152,13 +152,13 @@ namespace MyMDb.Migrations
                     b.HasData(
                         new
                         {
-                            UserId = "2f0c79c2-5c0b-4209-853a-0ceba79025b2",
-                            RoleId = "2a70329c-30b8-4460-93b3-db26ac403ea3"
+                            UserId = "ed547bfe-e814-4afb-aaee-9350391364ac",
+                            RoleId = "f8dc08db-2339-4d50-ad8e-4672a8585dd7"
                         },
                         new
                         {
-                            UserId = "2f0c79c2-5c0b-4209-853a-0ceba79025b2",
-                            RoleId = "2c120a04-a7d8-4462-a4be-e7ea10c4c51d"
+                            UserId = "ed547bfe-e814-4afb-aaee-9350391364ac",
+                            RoleId = "fa7f166e-0254-494b-bfeb-e5110fe35e90"
                         });
                 });
 
@@ -248,17 +248,17 @@ namespace MyMDb.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "2f0c79c2-5c0b-4209-853a-0ceba79025b2",
+                            Id = "ed547bfe-e814-4afb-aaee-9350391364ac",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "f0f149dc-5ac2-4d12-9fb3-961fab83bd6b",
+                            ConcurrencyStamp = "bd2f57bb-6c5d-4aeb-879b-b7b6becece2b",
                             Email = "secret",
                             EmailConfirmed = true,
                             LockoutEnabled = false,
                             NormalizedEmail = "secret",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEB0qzUeInjfNULjqsTdCQ3MDXh+h0I863cJXkHaWiiOXjk0GTAuSV/v5LLOf0j/wuw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAENNpNQ5MgJFtvbOgI7/C1BH9LZcV5u1pibDxENYt+xvTfxrr2tGrkiMklxlCg0ROwg==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "47041061-6e83-407f-b18b-a3aae21664f2",
+                            SecurityStamp = "fd494480-8380-4a70-bfa4-dc0b11320714",
                             TwoFactorEnabled = false,
                             UserName = "admin"
                         });
@@ -326,6 +326,7 @@ namespace MyMDb.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<double?>("Rating")
+                        .IsRequired()
                         .HasColumnType("float");
 
                     b.Property<string>("UserId")
@@ -343,9 +344,8 @@ namespace MyMDb.Migrations
 
             modelBuilder.Entity("MyMDb.Models.UserProfile", b =>
                 {
-                    b.Property<Guid?>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime?>("DateCreated")
                         .HasColumnType("datetime2");
@@ -353,20 +353,17 @@ namespace MyMDb.Migrations
                     b.Property<DateTime?>("DateModified")
                         .HasColumnType("datetime2");
 
+                    b.Property<Guid?>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("ProfilePicPath")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("UserName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
+                    b.HasKey("UserId");
 
                     b.ToTable("UserProfiles");
                 });
@@ -399,6 +396,9 @@ namespace MyMDb.Migrations
             modelBuilder.Entity("MyMDb.Models.Series", b =>
                 {
                     b.HasBaseType("MyMDb.Models.Media");
+
+                    b.Property<int?>("Seasons")
+                        .HasColumnType("int");
 
                     b.HasDiscriminator().HasValue("Series");
                 });
@@ -462,7 +462,7 @@ namespace MyMDb.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MyMDb.Models.AppUser", "User")
+                    b.HasOne("MyMDb.Models.UserProfile", "UserProfile")
                         .WithMany("Reviews")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -470,7 +470,7 @@ namespace MyMDb.Migrations
 
                     b.Navigation("Media");
 
-                    b.Navigation("User");
+                    b.Navigation("UserProfile");
                 });
 
             modelBuilder.Entity("MyMDb.Models.UserProfile", b =>
@@ -497,12 +497,15 @@ namespace MyMDb.Migrations
 
             modelBuilder.Entity("MyMDb.Models.AppUser", b =>
                 {
-                    b.Navigation("Reviews");
-
                     b.Navigation("UserProfile");
                 });
 
             modelBuilder.Entity("MyMDb.Models.Media", b =>
+                {
+                    b.Navigation("Reviews");
+                });
+
+            modelBuilder.Entity("MyMDb.Models.UserProfile", b =>
                 {
                     b.Navigation("Reviews");
                 });

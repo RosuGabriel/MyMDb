@@ -46,7 +46,8 @@ export const fetchMediaById = async (id: string): Promise<Media> => {
 export const createMovie = async (
   newMovie: Partial<Media>,
   poster: File | null,
-  video: File | null
+  video: File | null,
+  onUploadProgress: (progressEvent: any) => void
 ): Promise<Media> => {
   const formData = new FormData();
   formData.append("title", newMovie.title || "");
@@ -77,12 +78,97 @@ export const createMovie = async (
       formData,
       {
         headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress,
       }
     );
 
     return response.data;
   } catch (error) {
     console.error("Error creating movie:", error);
+    throw error;
+  }
+};
+
+export const createSeries = async (
+  newSeries: Partial<Media>,
+  poster: File | null,
+  onUploadProgress: (progressEvent: any) => void
+): Promise<Media> => {
+  const formData = new FormData();
+  formData.append("title", newSeries.title || "");
+  formData.append("description", newSeries.description || "");
+  formData.append("releaseDate", newSeries.releaseDate?.toISOString() || "");
+  formData.append("seasons", newSeries.seasons?.toString() || "1");
+
+  if (poster) {
+    const uniqueImageName = await generateUniqueFileName(
+      newSeries.title || "N/A" + Date.now().toString(),
+      poster
+    );
+    formData.append("poster", poster, uniqueImageName);
+    formData.append("posterPath", uniqueImageName);
+  }
+
+  try {
+    const response = await axiosInstance.post<Media>(
+      MEDIA_URL + "add_series",
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress,
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error creating series:", error);
+    throw error;
+  }
+};
+
+export const createEpisode = async (
+  newEpisode: Partial<Media>,
+  poster: File | null,
+  video: File | null,
+  onUploadProgress: (progressEvent: any) => void
+): Promise<Media> => {
+  const formData = new FormData();
+  formData.append("seriesId", newEpisode.id || "");
+  formData.append("title", newEpisode.title || "");
+  formData.append("description", newEpisode.description || "");
+  formData.append("releaseDate", newEpisode.releaseDate?.toISOString() || "");
+  formData.append("seasonNumber", newEpisode.seasonNumber?.toString() || "");
+  formData.append("episodeNumber", newEpisode.episodeNumber?.toString() || "");
+
+  if (poster) {
+    const imageName = `${newEpisode.seasonNumber?.toString() || ""}-${
+      newEpisode.episodeNumber?.toString() || ""
+    }${getFileExtension(poster.name)}`;
+    formData.append("poster", poster, imageName);
+    formData.append("posterPath", imageName);
+  }
+
+  if (video) {
+    const videoName = `S${newEpisode.seasonNumber?.toString() || ""}-E${
+      newEpisode.episodeNumber?.toString() || ""
+    }${getFileExtension(video.name)}`;
+    formData.append("video", video, videoName);
+    formData.append("videoPath", videoName);
+  }
+
+  try {
+    const response = await axiosInstance.post<Media>(
+      MEDIA_URL + "add_episode",
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress,
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error creating series:", error);
     throw error;
   }
 };
@@ -111,5 +197,9 @@ const generateUniqueFileName = async (
 };
 
 const getFileExtension = (fileName: string): string => {
-  return fileName.split(".").pop() || "";
+  let extension = "." + fileName.split(".").pop() || "";
+  if (extension == ".mkv") {
+    return ".mp4";
+  }
+  return extension;
 };

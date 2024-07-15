@@ -86,8 +86,8 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 // Services
 builder.Services.AddScoped<IMediaService, MediaService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IUserService, UserService>();
-
 
 // Add Identity
 builder.Services.AddIdentity<AppUser, IdentityRole>( options =>
@@ -135,9 +135,9 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole("user"));
 });
 
-builder.Services.Configure<IdentityOptions>(options =>
+builder.Services.Configure<IdentityOptions>(options => 
 {
-    // Configure Customize password requirements, lockout settings, etc.
+
 });
 
 // AutoMapper
