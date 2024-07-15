@@ -30,9 +30,11 @@ namespace MyMDb.Repositories
             return await _dbSet.FindAsync(id);
         }
 
-        public async Task AddAsync(T entity)
+        public async Task<T> AddAsync(T entity)
         {
             await _dbSet.AddAsync(entity);
+            await SaveChangesAsync();
+            return entity;
         }
 
         public async Task Update(T entity)

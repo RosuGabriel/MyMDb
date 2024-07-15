@@ -66,6 +66,7 @@ namespace MyMDb.Migrations
                     SeasonNumber = table.Column<int>(type: "int", nullable: true),
                     EpisodeNumber = table.Column<int>(type: "int", nullable: true),
                     SeriesId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    Seasons = table.Column<int>(type: "int", nullable: true),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: true),
                     DateModified = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -190,16 +191,16 @@ namespace MyMDb.Migrations
                 name: "UserProfiles",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     ProfilePicPath = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: true),
                     DateModified = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UserProfiles", x => x.Id);
+                    table.PrimaryKey("PK_UserProfiles", x => x.UserId);
                     table.ForeignKey(
                         name: "FK_UserProfiles_AspNetUsers_UserId",
                         column: x => x.UserId,
@@ -213,7 +214,7 @@ namespace MyMDb.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Rating = table.Column<double>(type: "float", nullable: true),
+                    Rating = table.Column<double>(type: "float", nullable: false),
                     Comment = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     MediaId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -224,16 +225,16 @@ namespace MyMDb.Migrations
                 {
                     table.PrimaryKey("PK_Reviews", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Reviews_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
                         name: "FK_Reviews_Media_MediaId",
                         column: x => x.MediaId,
                         principalTable: "Media",
                         principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Reviews_UserProfiles_UserId",
+                        column: x => x.UserId,
+                        principalTable: "UserProfiles",
+                        principalColumn: "UserId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -242,22 +243,22 @@ namespace MyMDb.Migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { "2a70329c-30b8-4460-93b3-db26ac403ea3", null, "admin", "ADMIN" },
-                    { "2c120a04-a7d8-4462-a4be-e7ea10c4c51d", null, "user", "USER" }
+                    { "f8dc08db-2339-4d50-ad8e-4672a8585dd7", null, "admin", "ADMIN" },
+                    { "fa7f166e-0254-494b-bfeb-e5110fe35e90", null, "user", "USER" }
                 });
 
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
-                values: new object[] { "2f0c79c2-5c0b-4209-853a-0ceba79025b2", 0, "f0f149dc-5ac2-4d12-9fb3-961fab83bd6b", "admin@admin.com", true, false, null, "ADMIN@ADMIN.COM", "ADMIN", "AQAAAAIAAYagAAAAEB0qzUeInjfNULjqsTdCQ3MDXh+h0I863cJXkHaWiiOXjk0GTAuSV/v5LLOf0j/wuw==", null, false, "47041061-6e83-407f-b18b-a3aae21664f2", false, "admin" });
+                values: new object[] { "ed547bfe-e814-4afb-aaee-9350391364ac", 0, "bd2f57bb-6c5d-4aeb-879b-b7b6becece2b", "admin@admin.com", true, false, null, "ADMIN@ADMIN.COM", "ADMIN", "AQAAAAIAAYagAAAAENNpNQ5MgJFtvbOgI7/C1BH9LZcV5u1pibDxENYt+xvTfxrr2tGrkiMklxlCg0ROwg==", null, false, "fd494480-8380-4a70-bfa4-dc0b11320714", false, "admin" });
 
             migrationBuilder.InsertData(
                 table: "AspNetUserRoles",
                 columns: new[] { "RoleId", "UserId" },
                 values: new object[,]
                 {
-                    { "2a70329c-30b8-4460-93b3-db26ac403ea3", "2f0c79c2-5c0b-4209-853a-0ceba79025b2" },
-                    { "2c120a04-a7d8-4462-a4be-e7ea10c4c51d", "2f0c79c2-5c0b-4209-853a-0ceba79025b2" }
+                    { "f8dc08db-2339-4d50-ad8e-4672a8585dd7", "ed547bfe-e814-4afb-aaee-9350391364ac" },
+                    { "fa7f166e-0254-494b-bfeb-e5110fe35e90", "ed547bfe-e814-4afb-aaee-9350391364ac" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -313,12 +314,6 @@ namespace MyMDb.Migrations
                 name: "IX_Reviews_UserId",
                 table: "Reviews",
                 column: "UserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_UserProfiles_UserId",
-                table: "UserProfiles",
-                column: "UserId",
-                unique: true);
         }
 
         /// <inheritdoc />
@@ -343,13 +338,13 @@ namespace MyMDb.Migrations
                 name: "Reviews");
 
             migrationBuilder.DropTable(
-                name: "UserProfiles");
-
-            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
                 name: "Media");
+
+            migrationBuilder.DropTable(
+                name: "UserProfiles");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");

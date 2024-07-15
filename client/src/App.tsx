@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ListMedia from "./components/ListMedia";
-import CreateMovie from "./components/CreateMedia";
+import { CreateMedia, AddEpisode } from "./components/CreateMedia";
 import Register from "./components/Register";
 import Login from "./components/Login";
 import ShowMedia from "./components/ShowMedia";
@@ -21,7 +21,8 @@ const App: React.FC = () => {
             <Route path="/" element={<Navigate to="/media" />} />
             <Route path="/media" element={<ListMedia />} />
             <Route path="/media/:id" element={<ShowMedia />} />
-            <Route path="/create" element={<CreateMovie />} />
+            <Route path="/create" element={<CreateMedia />} />
+            <Route path="/add-episode/:id" element={<AddEpisode />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />

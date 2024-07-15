@@ -11,5 +11,6 @@ namespace MyMDb.Models
         [Required]
         public string? UserId { get; set; }
         public virtual AppUser? User { get; set; }
+        public virtual ICollection<Review>? Reviews { get; set; }
     }
 }

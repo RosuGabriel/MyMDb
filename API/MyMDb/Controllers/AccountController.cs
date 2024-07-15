@@ -18,15 +18,17 @@ namespace MyMDb.Controllers
     public class AccountController : Controller
     {
         private readonly IUserService _userService;
+        private readonly IReviewService _reviewService;
         private readonly UserManager<AppUser> _userManager;
         private readonly SignInManager<AppUser> _signInManager;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public AccountController(IUserService userService, UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IConfiguration configuration, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public AccountController(IUserService userService, IReviewService reviewService, UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IConfiguration configuration, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _userService = userService;
+            _reviewService = reviewService;
             _userManager = userManager;
             _signInManager = signInManager;
             _configuration = configuration;
@@ -247,26 +249,34 @@ namespace MyMDb.Controllers
 
         [HttpPost]
         [Authorize]
-        [Route("add_movie_review")]
-        public async Task<IActionResult> AddMovieReview(string userId, Guid movieId, ReviewDto review)
+        [Route("add_review")]
+        public async Task<IActionResult> AddMovieReview([FromBody] ReviewDto review)
         {
-            throw new NotImplementedException();
-        }
+            if (_httpContextAccessor.HttpContext == null)
+            {
+                return Forbid();
+            }
 
-        [HttpPost]
-        [Authorize]
-        [Route("add_series_review")]
-        public async Task<IActionResult> AddSeriesReview(string userId, Guid seriesId, ReviewDto review)
-        {
-            throw new NotImplementedException();
-        }
+            var loggedInUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        [HttpPost]
-        [Authorize]
-        [Route("add_episode_review")]
-        public async Task<IActionResult> AddEpisodeReview(string userId, Guid episodeId, ReviewDto review)
-        {
-            throw new NotImplementedException();
+            if (loggedInUserId == null)
+            {
+                return Forbid();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var adddedReview = await _reviewService.AddReview(loggedInUserId, review);
+
+            if (adddedReview == null)
+            {
+                return BadRequest("Review adding failed");
+            }
+
+            return Ok();
         }
     }
 }

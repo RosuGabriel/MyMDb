@@ -5,6 +5,7 @@ using MyMDb.Models;
 using MyMDb.ServiceInterfaces;
 using MyMDb.Data;
 using Microsoft.AspNetCore.Authorization;
+using System.IO;
 
 namespace MyMDb.Controllers
 {
@@ -87,7 +88,23 @@ namespace MyMDb.Controllers
                 return NotFound();
             }
 
-            return Ok(media);
+            if (media.MediaType == "Movie")
+            {
+                var movie = await _mediaService.GetMovieById(id);
+                return Ok(movie);
+            }
+            else if (media.MediaType == "Series")
+            {
+                var series = await _mediaService.GetSeriesById(id);
+                return Ok(series);
+            }
+            else if (media.MediaType == "Episode")
+            {
+                var episode = await _mediaService.GetEpisodeById(id);
+                return Ok(episode);
+            }
+
+            return NotFound();
         }
 
         [HttpGet]
@@ -169,7 +186,7 @@ namespace MyMDb.Controllers
         [HttpPost]
         [Authorize("admin")]
         [Route("add_series")]
-        public async Task<IActionResult> AddSeries(SeriesDto series, IFormFile? poster)
+        public async Task<IActionResult> AddSeries([FromForm] SeriesDto series, IFormFile? poster)
         {
             var newSeries = _mapper.Map<Series>(series);
 
@@ -179,16 +196,26 @@ namespace MyMDb.Controllers
                 {
                     return BadRequest("Not an image file provided for poster.");
                 }
-                if (series.PosterPath == null)
+                if (newSeries.PosterPath == null)
                 {
                     return BadRequest("No path provided for poster");
                 }
 
-                var seriesImagesDirectory = Path.Combine(Paths.Root, Paths.ImagesPath, newSeries.Title + DateTime.Now.ToString());
+                var seriesImagesDirectory = Path.Combine(Paths.Root, Paths.ImagesPath, newSeries.Title);
+                var seriesVideosDirectory = Path.Combine(Paths.Root, Paths.VideosPath, newSeries.Title);
 
-                newSeries.PosterPath = Paths.ImagesPath + newSeries.PosterPath;
+                if (!Directory.Exists(seriesImagesDirectory))
+                {
+                    Directory.CreateDirectory(seriesImagesDirectory);
+                }
+                if (!Directory.Exists(seriesVideosDirectory))
+                {
+                    Directory.CreateDirectory(seriesVideosDirectory);
+                }
 
-                using (var stream = new FileStream(Paths.Root + series.PosterPath, FileMode.Create))
+                newSeries.PosterPath = Path.Combine(Paths.ImagesPath, newSeries.Title, newSeries.PosterPath);
+
+                using (var stream = new FileStream(Paths.Root + newSeries.PosterPath, FileMode.Create))
                 {
                     await poster.CopyToAsync(stream);
                 }
@@ -207,9 +234,16 @@ namespace MyMDb.Controllers
         [HttpPost]
         [Authorize("admin")]
         [Route("add_episode")]
-        public async Task<IActionResult> AddEpisode(EpisodeDto episode, IFormFile? poster, IFormFile? video)
+        public async Task<IActionResult> AddEpisode([FromForm] EpisodeDto episode, IFormFile? poster, IFormFile? video)
         {
             var newEpisode = _mapper.Map<Episode>(episode);
+
+            var series = await _mediaService.GetSeriesById(newEpisode.SeriesId);
+
+            if (series == null) 
+            {
+                return BadRequest("The episode is added to an non-existent series");
+            }
 
             if (poster != null)
             {
@@ -217,14 +251,14 @@ namespace MyMDb.Controllers
                 {
                     return BadRequest("Not an image file provided for poster.");
                 }
-                if (episode.PosterPath == null)
+                if (newEpisode.PosterPath == null)
                 {
                     return BadRequest("No path provided for poster");
                 }
 
-                newEpisode.PosterPath = Paths.ImagesPath + newEpisode.PosterPath;
+                newEpisode.PosterPath = Path.Combine(Paths.ImagesPath, series.Title, newEpisode.PosterPath);
 
-                using (var stream = new FileStream(Paths.Root + episode.PosterPath, FileMode.Create))
+                using (var stream = new FileStream(Paths.Root + newEpisode.PosterPath, FileMode.Create))
                 {
                     await poster.CopyToAsync(stream);
                 }
@@ -232,18 +266,18 @@ namespace MyMDb.Controllers
 
             if (video != null)
             {
-                if (!Extensions.IsImageFile(video.FileName))
+                if (!Extensions.IsVideoFile(video.FileName))
                 {
                     return BadRequest("Not a video file provided for video.");
                 }
-                if (episode.VideoPath == null)
+                if (newEpisode.VideoPath == null)
                 {
                     return BadRequest("No path provided for video");
                 }
 
-                newEpisode.VideoPath = Paths.VideosPath + newEpisode.VideoPath;
+                newEpisode.VideoPath = Path.Combine(Paths.VideosPath, series.Title, newEpisode.VideoPath);
 
-                using (var stream = new FileStream(Paths.Root + episode.VideoPath, FileMode.Create))
+                using (var stream = new FileStream(Paths.Root + newEpisode.VideoPath, FileMode.Create))
                 {
                     await video.CopyToAsync(stream);
                 }
