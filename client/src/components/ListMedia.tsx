@@ -45,7 +45,7 @@ const ListMedia: React.FC = () => {
 
   return (
     <div className="media-page">
-      <div className="btn-group p-3 mb-3 media-buttons" role="group">
+      <div className="btn-group p-3 mb-4 media-buttons" role="group">
         <button
           type="button"
           className={`btn btn-dark ${mediaType === "all" ? "active" : ""}`}
@@ -69,18 +69,18 @@ const ListMedia: React.FC = () => {
         </button>
       </div>
       <div className="container">
-        <div className="row">
+        <div className="row d-flex">
           {media.map((m) => (
             <div
               className="col-sm-6 col-md-4 col-lg-3 mb-4"
               key={m.id}
               onClick={() => handleClick(m.id)}
             >
-              <div className="card media-card btn btn-dark text-white">
+              <div className="card media-card btn btn-dark text-white h-100">
                 <img
                   src={m.posterPath}
                   alt={m.title}
-                  className="card-img-top media-card-img"
+                  className="card-img-top media-card-img rounded"
                 />
                 <div className="card-body">
                   <h5 className="card-title">{m.title}</h5>

@@ -10,9 +10,9 @@ using MyMDb.Services;
 using System.Text.Json.Serialization;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Http.Features;
-using Swashbuckle.AspNetCore.Filters;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
+using Microsoft.Extensions.FileProviders;
 
 
 
@@ -143,17 +143,19 @@ builder.Services.Configure<IdentityOptions>(options =>
 // AutoMapper
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
+var allowedClients = builder.Configuration.GetSection("ConnectionDetails:AllowedClients").Get<string[]>();
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowMyReactClient",
+    options.AddPolicy("AllowMyClient",
             builder =>
             {
-                builder.WithOrigins("http://localhost:3000")
+                builder.WithOrigins(allowedClients!)
                        .AllowAnyHeader()
                        .AllowAnyMethod();
             });
 });
 
+builder.Logging.ClearProviders();
 builder.Services.AddLogging();
 
 
@@ -166,13 +168,22 @@ if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseStaticFiles();
+}
+else
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(
+            Path.Combine(Directory.GetCurrentDirectory(), builder.Configuration["ConnectionDetails:RootLocation"]!)),
+        RequestPath = ""
+    });
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
 
 app.UseRouting();
-app.UseCors("AllowMyReactClient");
+app.UseCors("AllowMyClient");
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -181,4 +192,5 @@ app.MapIdentityApi<AppUser>();
 
 app.MapControllers();
 
-app.Run();
+var serverAddress = builder.Configuration["ConnectionDetails:ServerAddress"]; 
+app.Run(serverAddress);

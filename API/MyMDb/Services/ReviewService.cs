@@ -24,5 +24,15 @@ namespace MyMDb.Services
             review.Initialize();
             return await _reviewRepository.AddAsync(review);
         }
+
+        public async Task DeleteReview(Review review)
+        {
+            await _reviewRepository.Delete(review);
+        }
+
+        public async Task<Review?> GetByUserAsync(string userId, Guid mediaId)
+        {
+            return await _reviewRepository.GetByUserAsync(userId, mediaId);
+        }
     }
 }

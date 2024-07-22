@@ -399,3 +399,9 @@ FodyWeavers.xsd
 
 # root dir
 wwwroot/
+
+# config files
+*.appsettings.*
+tsconfig.*
+*.config.*
+

@@ -18,7 +18,7 @@ export const CreateMedia: React.FC = () => {
   const [image, setImage] = useState<File | null>(null);
   const [video, setVideo] = useState<File | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0); // Starea pentru progresul de incarcare
+  const [uploadProgress, setUploadProgress] = useState(0);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,7 +61,7 @@ export const CreateMedia: React.FC = () => {
       console.error("Error creating media:", error);
     } finally {
       setIsCreating(false);
-      setUploadProgress(0); // Resetăm progresul după finalizarea încărcării
+      setUploadProgress(0);
     }
   };
 
@@ -163,7 +163,7 @@ export const CreateMedia: React.FC = () => {
         {isCreating ? "Creating..." : `Create ${mediaType}`}
       </button>
 
-      {uploadProgress > 0 && ( // Afișăm bara de progres doar când progresul este mai mare de 0
+      {uploadProgress > 0 && (
         <div className="mt-3">
           <p>Upload progress: {uploadProgress}%</p>
           <progress value={uploadProgress} max="100" />
@@ -183,7 +183,7 @@ const CreateEpisode: React.FC<{ seriesId: string }> = ({ seriesId: id }) => {
   const [image, setImage] = useState<File | null>(null);
   const [video, setVideo] = useState<File | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0); // Starea pentru progresul de incarcare
+  const [uploadProgress, setUploadProgress] = useState(0);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -219,7 +219,7 @@ const CreateEpisode: React.FC<{ seriesId: string }> = ({ seriesId: id }) => {
       console.error("Error creating media:", error);
     } finally {
       setIsCreating(false);
-      setUploadProgress(0); // Resetăm progresul după finalizarea încărcării
+      setUploadProgress(0);
     }
   };
 
@@ -313,7 +313,7 @@ const CreateEpisode: React.FC<{ seriesId: string }> = ({ seriesId: id }) => {
         {isCreating ? "Creating..." : "Create Episode"}
       </button>
 
-      {uploadProgress > 0 && ( // Afișăm bara de progres doar când progresul este mai mare de 0
+      {uploadProgress > 0 && (
         <div className="mt-3">
           <p>Upload progress: {uploadProgress}%</p>
           <progress value={uploadProgress} max="100" />
