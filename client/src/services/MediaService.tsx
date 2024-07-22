@@ -143,7 +143,7 @@ export const createEpisode = async (
   if (poster) {
     const imageName = `${newEpisode.seasonNumber?.toString() || ""}-${
       newEpisode.episodeNumber?.toString() || ""
-    }${getFileExtension(poster.name)}`;
+    }.${getFileExtension(poster.name)}`;
     formData.append("poster", poster, imageName);
     formData.append("posterPath", imageName);
   }
@@ -151,7 +151,7 @@ export const createEpisode = async (
   if (video) {
     const videoName = `S${newEpisode.seasonNumber?.toString() || ""}-E${
       newEpisode.episodeNumber?.toString() || ""
-    }${getFileExtension(video.name)}`;
+    }.${getFileExtension(video.name)}`;
     formData.append("video", video, videoName);
     formData.append("videoPath", videoName);
   }
@@ -197,9 +197,6 @@ const generateUniqueFileName = async (
 };
 
 const getFileExtension = (fileName: string): string => {
-  let extension = "." + fileName.split(".").pop() || "";
-  if (extension == ".mkv") {
-    return ".mp4";
-  }
+  let extension = fileName.split(".").pop() || "";
   return extension;
 };

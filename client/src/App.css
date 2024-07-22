@@ -4,10 +4,15 @@ body,
   background-color: #282c34;
   color: white;
   height: 100%;
+  margin: 0;
 }
 
 .media-page {
   text-align: center;
+}
+
+.pt-content {
+  padding-top: 70px;
 }
 
 .media-card {

@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 
-export const API_URL = "https://localhost:7292/";
+export const API_URL = "http://api_address.com:5000/";
 
 export let axiosInstance: AxiosInstance = axios.create({
   baseURL: API_URL + "api/",
@@ -46,7 +46,9 @@ export interface Media {
 
 export interface Review {
   id: string;
-  user: userProfile;
+  userProfile: userProfile;
+  userId: string;
+  mediaId: string;
   createDate: Date;
   modifiedDate: Date;
   rating: number;

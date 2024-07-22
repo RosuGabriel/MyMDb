@@ -25,14 +25,10 @@ function Navbar() {
 
   return (
     <nav className="navbar navbar-expand-sm bg-dark navbar-dark fixed-top d-flex p-3 justify-content-between align-items-center">
-      <a
-        className="btn btn-warning ms-5"
-        href="/"
-        style={{ fontWeight: "900" }}
-      >
+      <a className="btn btn-warning" href="/" style={{ fontWeight: "900" }}>
         MyMDb
       </a>
-      <div className="btn-group me-5">
+      <div className="btn-group">
         {isAdminUser && (
           <a className="btn btn-secondary" href="/create">
             Add Media

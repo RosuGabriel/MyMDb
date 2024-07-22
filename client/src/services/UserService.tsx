@@ -71,6 +71,10 @@ const getCreditentials = (): Creditentials | null => {
   return JSON.parse(creditentials) as Creditentials;
 };
 
+export const getLoggedUser = (): string | null => {
+  return getCreditentials()?.nameid!;
+};
+
 export const isAuthenticated = (): boolean => {
   if (getCreditentials() == null) {
     return false;

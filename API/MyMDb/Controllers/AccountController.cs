@@ -137,19 +137,19 @@ namespace MyMDb.Controllers
                 return Forbid();
             }
 
-            var loggedInUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var loggedUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (!ModelState.IsValid) 
             {
                 return BadRequest(ModelState);
             }
 
-            if (loggedInUserId != userProfile.UserId || loggedInUserId == null)
+            if (loggedUserId != userProfile.UserId || loggedUserId == null)
             {
                 return Forbid();
             }
 
-            var user = await _userService.GetUserProfileAsync(loggedInUserId);
+            var user = await _userService.GetUserProfileAsync(loggedUserId);
             if (user == null) 
             {
                 return NotFound();
@@ -174,7 +174,7 @@ namespace MyMDb.Controllers
                 }
             }
 
-            var updatedProfile = await _userService.EditUserProfileAsync(loggedInUserId, userProfile);
+            var updatedProfile = await _userService.EditUserProfileAsync(loggedUserId, userProfile);
             
             if (updatedProfile == null)
             {
@@ -248,7 +248,7 @@ namespace MyMDb.Controllers
         }
 
         [HttpPost]
-        [Authorize]
+        [Authorize("user")]
         [Route("add_review")]
         public async Task<IActionResult> AddMovieReview([FromBody] ReviewDto review)
         {
@@ -257,11 +257,18 @@ namespace MyMDb.Controllers
                 return Forbid();
             }
 
-            var loggedInUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var loggedUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            if (loggedInUserId == null)
+            if (loggedUserId == null)
             {
-                return Forbid();
+                return Forbid("You need to be logged in to review a media");
+            }
+
+            var existentReview = await _reviewService.GetByUserAsync(loggedUserId, review.mediaId);
+
+            if (existentReview != null) 
+            {
+                return BadRequest("Media already reviewed");
             }
 
             if (!ModelState.IsValid)
@@ -269,12 +276,46 @@ namespace MyMDb.Controllers
                 return BadRequest(ModelState);
             }
 
-            var adddedReview = await _reviewService.AddReview(loggedInUserId, review);
+            var adddedReview = await _reviewService.AddReview(loggedUserId, review);
 
             if (adddedReview == null)
             {
                 return BadRequest("Review adding failed");
             }
+
+            return Ok(adddedReview);
+        }
+
+        [HttpDelete]
+        [Authorize("user")]
+        [Route("delete_review/{mediaId}")]
+        public async Task<IActionResult> DeleteMovieReview(Guid mediaId)
+        {
+            if (_httpContextAccessor.HttpContext == null)
+            {
+                return Forbid();
+            }
+
+            var loggedUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (loggedUserId == null)
+            {
+                return Forbid("You need to be logged in to review a media");
+            }
+
+            var review = await _reviewService.GetByUserAsync(loggedUserId, mediaId);
+
+            if (review == null)
+            {
+                return NotFound("No review to delete");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            await _reviewService.DeleteReview(review);
 
             return Ok();
         }

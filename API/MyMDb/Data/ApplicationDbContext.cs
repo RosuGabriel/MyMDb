@@ -39,6 +39,7 @@ namespace MyMDb.Data
 
             var adminUser = new AppUser
             {
+                Id = Guid.NewGuid().ToString(),
                 UserName = "admin",
                 NormalizedUserName = "ADMIN",
                 Email = "secret",
@@ -48,7 +49,10 @@ namespace MyMDb.Data
                 PasswordHash = new PasswordHasher<AppUser>().HashPassword(null!, "secret")
             };
 
+            var adminProfile = new UserProfile { UserId = adminUser.Id, UserName = "Admin"};
+
             builder.Entity<AppUser>().HasData(adminUser);
+            builder.Entity<UserProfile>().HasData(adminProfile);
 
             var adminUserRoles = new List<IdentityUserRole<string>>
         {

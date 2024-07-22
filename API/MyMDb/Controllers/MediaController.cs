@@ -31,8 +31,6 @@ namespace MyMDb.Controllers
             var allMedia = await _mediaService.GetAllMedia();
             var mediaDtos = _mapper.Map<List<MediaDto>>(allMedia);
 
-            Console.WriteLine($"\n\nCurrent dir: {Directory.GetCurrentDirectory()}\n\n");
-
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);

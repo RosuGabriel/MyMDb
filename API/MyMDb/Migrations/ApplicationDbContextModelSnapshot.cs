@@ -51,13 +51,13 @@ namespace MyMDb.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "f8dc08db-2339-4d50-ad8e-4672a8585dd7",
+                            Id = "340773b6-3bee-4995-bd42-6aeb61372df2",
                             Name = "admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "fa7f166e-0254-494b-bfeb-e5110fe35e90",
+                            Id = "dddd1f37-5705-46ac-9721-f0976820f188",
                             Name = "user",
                             NormalizedName = "USER"
                         });
@@ -152,13 +152,13 @@ namespace MyMDb.Migrations
                     b.HasData(
                         new
                         {
-                            UserId = "ed547bfe-e814-4afb-aaee-9350391364ac",
-                            RoleId = "f8dc08db-2339-4d50-ad8e-4672a8585dd7"
+                            UserId = "67fe61a3-a5a0-4966-b841-68b233355708",
+                            RoleId = "340773b6-3bee-4995-bd42-6aeb61372df2"
                         },
                         new
                         {
-                            UserId = "ed547bfe-e814-4afb-aaee-9350391364ac",
-                            RoleId = "fa7f166e-0254-494b-bfeb-e5110fe35e90"
+                            UserId = "67fe61a3-a5a0-4966-b841-68b233355708",
+                            RoleId = "dddd1f37-5705-46ac-9721-f0976820f188"
                         });
                 });
 
@@ -248,17 +248,17 @@ namespace MyMDb.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "ed547bfe-e814-4afb-aaee-9350391364ac",
+                            Id = "67fe61a3-a5a0-4966-b841-68b233355708",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "bd2f57bb-6c5d-4aeb-879b-b7b6becece2b",
+                            ConcurrencyStamp = "07f46947-8aba-4098-bbf6-4746064c8401",
                             Email = "secret",
                             EmailConfirmed = true,
                             LockoutEnabled = false,
                             NormalizedEmail = "secret",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAENNpNQ5MgJFtvbOgI7/C1BH9LZcV5u1pibDxENYt+xvTfxrr2tGrkiMklxlCg0ROwg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMOy8SH3B93QYXQ+ELAMa/OFKJs5KZp3NYAhYEgdjsqlvRZ76lYiZ3MAiaDTcLw6Dw==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "fd494480-8380-4a70-bfa4-dc0b11320714",
+                            SecurityStamp = "2c55c946-e367-40f2-ae1d-1b27c6ea135f",
                             TwoFactorEnabled = false,
                             UserName = "admin"
                         });
@@ -366,6 +366,12 @@ namespace MyMDb.Migrations
                     b.HasKey("UserId");
 
                     b.ToTable("UserProfiles");
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = "67fe61a3-a5a0-4966-b841-68b233355708"
+                        });
                 });
 
             modelBuilder.Entity("MyMDb.Models.Episode", b =>
