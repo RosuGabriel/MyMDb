@@ -401,7 +401,8 @@ FodyWeavers.xsd
 wwwroot/
 
 # config files
-*.appsettings.*
+appsettings*
+*appsettings*
 tsconfig.*
-*.config.*
+*config.*
 
