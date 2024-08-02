@@ -28,7 +28,10 @@ namespace MyMDb.ServiceInterfaces
         Task<Series?> EditSeries(Guid id, Series editedSeries);
         Task<Episode?> EditEpisode(Guid id, Episode editedEpisode);
 
-        //delete
+        // delete
         Task<bool> DeleteMedia(Guid id);
+
+        // others
+        public Task NormalizeVideo(string videoPath);
     }
 }

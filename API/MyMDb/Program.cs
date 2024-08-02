@@ -168,16 +168,16 @@ if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.UseStaticFiles();
+    var rootPath = Path.Combine(Directory.GetCurrentDirectory(), builder.Configuration["ConnectionDetails:RootDevLocation"]!);
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(rootPath),
+        RequestPath = ""
+    });
 }
 else
 {
-    app.UseStaticFiles(new StaticFileOptions
-    {
-        FileProvider = new PhysicalFileProvider(
-            Path.Combine(Directory.GetCurrentDirectory(), builder.Configuration["ConnectionDetails:RootLocation"]!)),
-        RequestPath = ""
-    });
+    app.UseStaticFiles();
 }
 
 app.UseHttpsRedirection();

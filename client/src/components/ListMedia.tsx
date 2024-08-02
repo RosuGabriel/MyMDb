@@ -12,6 +12,8 @@ const ListMedia: React.FC = () => {
   const [media, setMedia] = useState<Media[]>([]);
   const navigate = useNavigate();
 
+  const defaultImage = "film.png";
+
   useEffect(() => {
     const fetchMediaList = async () => {
       let fetchedMedia: Media[] = [];
@@ -24,12 +26,16 @@ const ListMedia: React.FC = () => {
         fetchedMedia = await fetchSeries();
       }
 
-      fetchedMedia = fetchedMedia.map((m) => ({
-        ...m,
-        posterPath: m.posterPath ? API_URL + m.posterPath : "film.png",
-      }));
+      const updatedMedia = await Promise.all(
+        fetchedMedia.map(async (m) => {
+          return {
+            ...m,
+            posterPath: m.posterPath ? API_URL + m.posterPath : defaultImage,
+          };
+        })
+      );
 
-      setMedia(fetchedMedia);
+      setMedia(updatedMedia);
     };
 
     fetchMediaList();
@@ -41,6 +47,13 @@ const ListMedia: React.FC = () => {
 
   const handleClick = (mediaId: string) => {
     navigate("/media/" + mediaId);
+  };
+
+  const handleImageSrcError = (
+    e: React.SyntheticEvent<HTMLImageElement, Event>
+  ) => {
+    const img = e.currentTarget as HTMLImageElement;
+    img.src = defaultImage;
   };
 
   return (
@@ -79,6 +92,7 @@ const ListMedia: React.FC = () => {
               <div className="card media-card btn btn-dark text-white h-100">
                 <img
                   src={m.posterPath}
+                  onError={handleImageSrcError}
                   alt={m.title}
                   className="card-img-top media-card-img rounded"
                 />
