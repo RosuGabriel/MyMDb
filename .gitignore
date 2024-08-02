@@ -405,5 +405,7 @@ appsettings*
 *appsettings*
 tsconfig.*
 *config.*
+launchSettings.json
 
-"launchSettings.json" 
+# build files
+dist/

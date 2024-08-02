@@ -153,7 +153,8 @@ namespace MyMDb.Controllers
             }
 
             if (video != null)
-            {
+            { 
+
                 if (!Extensions.IsVideoFile(video.FileName))
                 {
                     return BadRequest("Not a video file provided for video.");
@@ -169,6 +170,9 @@ namespace MyMDb.Controllers
                 {
                     await video.CopyToAsync(stream);
                 }
+
+                // Process the vide to make it browser accepted without blocking execution
+                _mediaService.NormalizeVideo(Paths.Root + newMovie.VideoPath);
             }
 
             newMovie = await _mediaService.AddMovie(newMovie);
@@ -199,13 +203,14 @@ namespace MyMDb.Controllers
                     return BadRequest("No path provided for poster");
                 }
 
+                // Setting up series directory
                 var seriesImagesDirectory = Path.Combine(Paths.Root, Paths.ImagesPath, newSeries.Title);
-                var seriesVideosDirectory = Path.Combine(Paths.Root, Paths.VideosPath, newSeries.Title);
-
                 if (!Directory.Exists(seriesImagesDirectory))
                 {
                     Directory.CreateDirectory(seriesImagesDirectory);
                 }
+
+                var seriesVideosDirectory = Path.Combine(Paths.Root, Paths.VideosPath, newSeries.Title);
                 if (!Directory.Exists(seriesVideosDirectory))
                 {
                     Directory.CreateDirectory(seriesVideosDirectory);

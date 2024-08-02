@@ -1,16 +1,19 @@
 ﻿using MyMDb.RepositoryInterfaces;
 using MyMDb.Models;
 using MyMDb.ServiceInterfaces;
+using System.Diagnostics;
 
 namespace MyMDb.Services
 {
     public class MediaService : IMediaService
     {
         private readonly IMediaRepository _MediaRepository;
+        private readonly IConfiguration _configuration;
 
-        public MediaService(IMediaRepository MediaRepository)
+        public MediaService(IMediaRepository MediaRepository, IConfiguration configuration)
         {
             _MediaRepository = MediaRepository;
+            _configuration = configuration;
         }
 
         // getting
@@ -163,15 +166,15 @@ namespace MyMDb.Services
             }
 
             // sterge poster si video odata cu movie
-            //// daca e posterul default de facut sa nu se stearga
-            //if (System.IO.File.Exists(Paths.Root + mediaToDelete.PosterPath))
-            //{
-            //    System.IO.File.Delete(Paths.Root + mediaToDelete.PosterPath);
-            //}
-            //if (System.IO.File.Exists(Paths.Root + mediaToDelete.VideoPath))
-            //{
-            //    System.IO.File.Delete(Paths.Root + mediaToDelete.VideoPath);
-            //}
+            if (mediaToDelete.PosterPath != null && System.IO.File.Exists(Path.Combine(_configuration["ConnectionDetails:RootLocation"]!, mediaToDelete.PosterPath)))
+            {
+                System.IO.File.Delete(Path.Combine(_configuration["ConnectionDetails:RootLocation"]!, mediaToDelete.PosterPath));
+            }
+
+            if (mediaToDelete.VideoPath != null && System.IO.File.Exists(Path.Combine(_configuration["ConnectionDetails:RootLocation"]!, mediaToDelete.VideoPath)))
+            {
+                System.IO.File.Delete(Path.Combine(_configuration["ConnectionDetails:RootLocation"]!, mediaToDelete.VideoPath));
+            }
 
             await _MediaRepository.Delete(mediaToDelete);
 
@@ -193,6 +196,64 @@ namespace MyMDb.Services
         public async Task<Episode?> GetEpisodeById(Guid id)
         {
             return await _MediaRepository.GetEpisodeByIdAsync(id);
+        }
+
+        public async Task NormalizeVideo(string videoPath)
+        {
+            string scriptPath;
+            string shell;
+
+            videoPath = Path.Combine(Directory.GetCurrentDirectory(), videoPath);
+
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            {
+                // Pe Windows
+                scriptPath = Path.Combine(Directory.GetCurrentDirectory(), "convert_to_mp4_aac.bat");
+                shell = "cmd.exe";
+            }
+            else
+            {
+                // Pe Linux
+                scriptPath = Path.Combine(Directory.GetCurrentDirectory(), "convert_to_mp4_aac.sh"); ;
+                shell = "/bin/bash";
+            }
+
+            ProcessStartInfo processStartInfo = new ProcessStartInfo
+            {
+                FileName = shell,
+                Arguments = (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                            ? $"/c \"{scriptPath} \"{videoPath}\"\""
+                            : $"-c \"{scriptPath} \"{videoPath}\"\"",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            try
+            {
+                using (Process process = Process.Start(processStartInfo)!)
+                {
+                    var outputTask = process.StandardOutput.ReadToEndAsync();
+                    var errorsTask = process.StandardError.ReadToEndAsync();
+
+                    await process.WaitForExitAsync();
+
+                    var output = await outputTask;
+                    var errors = await errorsTask;
+
+                    Console.WriteLine("Output:");
+                    Console.WriteLine(output);
+                    Console.WriteLine("Errors:");
+                    Console.WriteLine(errors);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+            }
+
+            Console.WriteLine("sf");
         }
     }
 }
