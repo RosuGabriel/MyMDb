@@ -24,8 +24,9 @@ namespace MyMDb.Controllers
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ILogger<AccountController> _logger;
 
-        public AccountController(IUserService userService, IReviewService reviewService, UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IConfiguration configuration, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public AccountController(IUserService userService, IReviewService reviewService, UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IConfiguration configuration, IMapper mapper, IHttpContextAccessor httpContextAccessor, ILogger<AccountController> logger)
         {
             _userService = userService;
             _reviewService = reviewService;
@@ -34,6 +35,7 @@ namespace MyMDb.Controllers
             _configuration = configuration;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _logger = logger;
         }
 
         [HttpPost]
@@ -166,9 +168,9 @@ namespace MyMDb.Controllers
                     return BadRequest("No path provided for profile pic");
                 }
 
-                userProfile.ProfilePicPath = Paths.ProfilePath + userProfile.ProfilePicPath;
-                Console.WriteLine("\n\n" + userProfile.ProfilePicPath + "\n\n");
-                using (var stream = new FileStream(Paths.Root + userProfile.ProfilePicPath, FileMode.Create))
+                userProfile.ProfilePicPath = _configuration["Paths:ProfilePics"] + userProfile.ProfilePicPath;
+                
+                using (var stream = new FileStream(_configuration["Paths:Root"] + userProfile.ProfilePicPath, FileMode.Create))
                 {
                     await profilePic.CopyToAsync(stream);
                 }
@@ -188,25 +190,31 @@ namespace MyMDb.Controllers
         [Route("login")]
         public async Task<IActionResult> Login([FromBody] UserDto userDto)
         {
+            _logger.LogInformation("Login attempt for user: {Email}", userDto.Email);
+
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("Invalid model state for user: {Email}", userDto.Email);
                 return BadRequest(ModelState);
             }
 
             if (userDto.Email == null || userDto.Password == null)
             {
+                _logger.LogWarning("Email or password not provided for login attempt");
                 return NotFound();
             }
 
             var user = await _userManager.FindByEmailAsync(userDto.Email);
             if (user == null)
             {
+                _logger.LogWarning("User with email {Email} not found", userDto.Email);
                 return Unauthorized(new { Message = "Email not found" });
             }
 
             var result = await _signInManager.CheckPasswordSignInAsync(user, userDto.Password, false);
             if (!result.Succeeded)
             {
+                _logger.LogWarning("Failed login attempt for user: {Email}", userDto.Email);
                 return Unauthorized(new { Message = "Wrong password" });
             }
 
@@ -215,6 +223,7 @@ namespace MyMDb.Controllers
             var keyString = _configuration["Jwt:Key"];
             if (string.IsNullOrEmpty(keyString))
             {
+                _logger.LogError("JWT key is not configured.");
                 throw new InvalidOperationException("JWT key is not configured.");
             }
 
@@ -227,7 +236,6 @@ namespace MyMDb.Controllers
                 new Claim(ClaimTypes.Email, userDto.Email)
             };
 
-            // Adaugă fiecare rol în lista de revendicări
             foreach (var role in roles)
             {
                 claims.Add(new Claim(ClaimTypes.Role, role));
@@ -244,6 +252,7 @@ namespace MyMDb.Controllers
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenString = tokenHandler.WriteToken(token);
 
+            _logger.LogInformation("Login successful for user: {Email}", userDto.Email);
             return Ok(new { Token = tokenString });
         }
 

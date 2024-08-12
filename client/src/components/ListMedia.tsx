@@ -1,24 +1,28 @@
 import React, { useState, useEffect } from "react";
 import { Media, API_URL } from "../Data";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import { fetchMedia, fetchMovies, fetchSeries } from "../services/MediaService";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../App.css";
 
 const ListMedia: React.FC = () => {
-  const [mediaType, setMediaType] = useState<"movies" | "series" | "all">(
-    "all"
-  );
-  const [media, setMedia] = useState<Media[]>([]);
   const navigate = useNavigate();
-
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const initialMediaType =
+    (queryParams.get("type") as "movies" | "series" | "movies&series") ||
+    "movies&series";
+  const [mediaType, setMediaType] = useState<
+    "movies" | "series" | "movies&series"
+  >(initialMediaType);
+  const [media, setMedia] = useState<Media[]>([]);
   const defaultImage = "film.png";
 
   useEffect(() => {
     const fetchMediaList = async () => {
       let fetchedMedia: Media[] = [];
 
-      if (mediaType === "all") {
+      if (mediaType === "movies&series") {
         fetchedMedia = await fetchMedia();
       } else if (mediaType === "movies") {
         fetchedMedia = await fetchMovies();
@@ -41,8 +45,11 @@ const ListMedia: React.FC = () => {
     fetchMediaList();
   }, [mediaType]);
 
-  const handleMediaTypeChange = (type: "movies" | "series" | "all") => {
+  const handleMediaTypeChange = (
+    type: "movies" | "series" | "movies&series"
+  ) => {
     setMediaType(type);
+    navigate(`?type=${type}`);
   };
 
   const handleClick = (mediaId: string) => {
@@ -61,8 +68,10 @@ const ListMedia: React.FC = () => {
       <div className="btn-group p-3 mb-4 media-buttons" role="group">
         <button
           type="button"
-          className={`btn btn-dark ${mediaType === "all" ? "active" : ""}`}
-          onClick={() => handleMediaTypeChange("all")}
+          className={`btn btn-dark ${
+            mediaType === "movies&series" ? "active" : ""
+          }`}
+          onClick={() => handleMediaTypeChange("movies&series")}
         >
           All
         </button>

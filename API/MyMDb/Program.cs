@@ -13,14 +13,14 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
 using Microsoft.Extensions.FileProviders;
+using Serilog;
 
 
 
 // ------------------------------ Builder
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
-    throw new InvalidOperationException("Connection string 'DefaultConnection not found!'");
+var isLinux = Environment.OSVersion.Platform == PlatformID.Unix;
 
 // Add services to the container.
 
@@ -73,6 +73,18 @@ builder.WebHost.ConfigureKestrel(options =>
     options.Limits.MaxRequestBodySize = 50L * 1024 * 1024 * 1024;
 });
 
+// Database connection based on OS
+System.String? connectionString;
+if (isLinux)
+{
+    connectionString = builder.Configuration.GetConnectionString("LinuxDefaultConnection") ??
+        throw new InvalidOperationException("Connection string 'DefaultConnection not found!'");
+}
+else
+{
+    connectionString = builder.Configuration.GetConnectionString("WindowsDefaultConnection") ??
+        throw new InvalidOperationException("Connection string 'DefaultConnection not found!'");
+}
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
@@ -156,7 +168,18 @@ builder.Services.AddCors(options =>
 });
 
 builder.Logging.ClearProviders();
-builder.Services.AddLogging();
+builder.Services.AddLogging(logging =>
+{
+    logging.ClearProviders();
+    logging.AddConsole();
+    logging.AddDebug();
+    if (isLinux)
+    {
+        logging.AddSerilog(new LoggerConfiguration()
+                        .WriteTo.File("/var/www/MyMDb/api/api.log")
+                        .CreateLogger());
+    }
+});
 
 
 // ------------------------------ App
@@ -168,7 +191,7 @@ if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
-    var rootPath = Path.Combine(Directory.GetCurrentDirectory(), builder.Configuration["ConnectionDetails:RootDevLocation"]!);
+    var rootPath = Path.Combine(Directory.GetCurrentDirectory(), builder.Configuration["Paths:RootDev"]!);
     app.UseStaticFiles(new StaticFileOptions
     {
         FileProvider = new PhysicalFileProvider(rootPath),

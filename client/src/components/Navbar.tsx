@@ -15,11 +15,11 @@ function Navbar() {
     checkAuth();
 
     window.addEventListener("storage", checkAuth);
-    window.removeEventListener("authChange", checkAuth);
+    window.addEventListener("authChange", checkAuth);
 
     return () => {
       window.removeEventListener("storage", checkAuth);
-      window.addEventListener("authChange", checkAuth);
+      window.removeEventListener("authChange", checkAuth);
     };
   }, []);
 

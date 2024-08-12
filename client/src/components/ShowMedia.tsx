@@ -1,5 +1,6 @@
+import { useParams, useLocation } from "react-router-dom";
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Media, Review, API_URL } from "../Data";
 import { fetchMediaById, deleteMedia } from "../services/MediaService";
 import {
@@ -11,8 +12,12 @@ import { deleteReview } from "../services/ReviewService";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../App.css";
 
-const ShowMedia: React.FC<{ mediaId: string }> = ({ mediaId }) => {
+const ShowMedia: React.FC<{ mediaId: string; season: number }> = ({
+  mediaId,
+  season,
+}) => {
   const [media, setMedia] = useState<Media | null>(null);
+  const [selectedSeason, setSelectedSeason] = useState(season);
   const navigate = useNavigate();
   const [isAdminUser, setIsAdminUser] = useState(isAdmin());
 
@@ -53,22 +58,26 @@ const ShowMedia: React.FC<{ mediaId: string }> = ({ mediaId }) => {
 
     checkAuth();
     window.addEventListener("storage", checkAuth);
-    window.removeEventListener("authChange", checkAuth);
+    window.addEventListener("authChange", checkAuth);
 
     fetchMedia();
 
     return () => {
       window.removeEventListener("storage", checkAuth);
-      window.addEventListener("authChange", checkAuth);
+      window.removeEventListener("authChange", checkAuth);
     };
   }, [mediaId]);
+
+  useEffect(() => {
+    setSelectedSeason(season);
+  }, [season]);
 
   return (
     <div className="media-page p-0 pb-5 p-md-1 p-lg-3">
       {media ? (
         <>
           {media.mediaType === "Series" ? (
-            <ShowSeries {...media} />
+            <ShowSeries {...media} selectedSeason={selectedSeason} />
           ) : (
             <ShowMovieOrEpisode {...media} />
           )}
@@ -82,14 +91,12 @@ const ShowMedia: React.FC<{ mediaId: string }> = ({ mediaId }) => {
                   Add Episode
                 </a>
               )}
-
               <button
                 className="btn btn-danger"
                 onClick={() => {
                   const userConfirmed = window.confirm(
                     "Are you sure you want to delete this media?"
                   );
-
                   if (userConfirmed) {
                     handleDelete();
                   }
@@ -132,12 +139,13 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
           <img src={posterPath} alt={title} className="img-fluid rounded" />
         </div>
         <div className="col-md-8">
+          <br />
           <h2>{media.title == "N/A" ? "" : media.title}</h2>
           {media.mediaType == "Episode" &&
             media.episodeNumber &&
             media.seasonNumber && (
               <h3>
-                {media.series.title} - Season {media.seasonNumber} / Episode{" "}
+                {media.series.title} - Season {media.seasonNumber} | Episode{" "}
                 {media.episodeNumber}
               </h3>
             )}
@@ -151,11 +159,15 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
   );
 };
 
-const ShowSeries: React.FC<Media> = (series: Media) => {
-  const { title, description, posterPath, episodes } = series;
-  const [selectedSeason, setSelectedSeason] = useState(1);
+const ShowSeries: React.FC<Media & { selectedSeason: number }> = (series) => {
+  const { title, description, posterPath, episodes, selectedSeason } = series;
+  const [season, setSeason] = useState(selectedSeason);
+  const navigate = useNavigate();
+
   const handleSeasonChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedSeason(parseInt(e.target.value));
+    const newSeason = parseInt(e.target.value);
+    setSeason(newSeason);
+    navigate(`/media/${series.id}?season=${newSeason}`);
   };
 
   return (
@@ -165,13 +177,14 @@ const ShowSeries: React.FC<Media> = (series: Media) => {
           <img src={posterPath} alt={title} className="img-fluid rounded" />
         </div>
         <div className="col-md-8">
+          <br />
           <h2>{title}</h2>
           <p>{description}</p>
           <div className="season-selector mt-3">
             <select
               id="seasonSelect"
               className="form-select bg-secondary text-white"
-              value={selectedSeason}
+              value={season}
               onChange={handleSeasonChange}
             >
               {Array.from({ length: series.seasons }, (_, index) => (
@@ -180,19 +193,21 @@ const ShowSeries: React.FC<Media> = (series: Media) => {
                 </option>
               ))}
             </select>
-            {episodes ? (
-              <div className="episode-list mt-4 d-flex justify-content-start">
+            {episodes &&
+            episodes.$values &&
+            episodes.$values.filter(
+              (episode: Media) => episode.seasonNumber === season
+            ).length ? (
+              <div className="episode-list mt-4 d-flex justify-content-start flex-wrap">
                 {episodes.$values
-                  .filter(
-                    (episode: Media) => episode.seasonNumber === selectedSeason
-                  )
+                  .filter((episode: Media) => episode.seasonNumber === season)
                   .sort(
                     (a: Media, b: Media) => a.episodeNumber - b.episodeNumber
                   )
                   .map((episode: Media) => (
                     <div key={episode.id}>
                       <a
-                        href={"/media/" + episode.id}
+                        href={`/media/${episode.id}`}
                         className="btn btn-dark me-2 mb-2"
                       >
                         Episode {episode.episodeNumber}
@@ -201,7 +216,9 @@ const ShowSeries: React.FC<Media> = (series: Media) => {
                   ))}
               </div>
             ) : (
-              <h2 className="p-5">This season has no episodes</h2>
+              <h5 className="mt-4 d-flex justify-content-start">
+                🤔 Looks like there are no episodes for this season
+              </h5>
             )}
           </div>
         </div>
@@ -321,9 +338,11 @@ const ShowReviews: React.FC<{ reviewsParam: Review[]; mediaId: string }> = ({
 };
 
 const MediaPage: React.FC = () => {
-  let { id } = useParams();
+  let { id } = useParams<{ id: string }>();
+  let query = new URLSearchParams(useLocation().search);
+  let season = query.get("season");
 
-  return <ShowMedia mediaId={id!} />;
+  return <ShowMedia mediaId={id!} season={season ? parseInt(season) : 1} />;
 };
 
 export default MediaPage;
