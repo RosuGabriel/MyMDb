@@ -166,14 +166,14 @@ namespace MyMDb.Services
             }
 
             // sterge poster si video odata cu movie
-            if (mediaToDelete.PosterPath != null && System.IO.File.Exists(Path.Combine(_configuration["ConnectionDetails:RootLocation"]!, mediaToDelete.PosterPath)))
+            if (mediaToDelete.PosterPath != null && System.IO.File.Exists(Path.Combine(_configuration["Paths:Root"]!, mediaToDelete.PosterPath)))
             {
-                System.IO.File.Delete(Path.Combine(_configuration["ConnectionDetails:RootLocation"]!, mediaToDelete.PosterPath));
+                System.IO.File.Delete(Path.Combine(_configuration["Paths:Root"]!, mediaToDelete.PosterPath));
             }
 
-            if (mediaToDelete.VideoPath != null && System.IO.File.Exists(Path.Combine(_configuration["ConnectionDetails:RootLocation"]!, mediaToDelete.VideoPath)))
+            if (mediaToDelete.VideoPath != null && System.IO.File.Exists(Path.Combine(_configuration["Paths:Root"]!, mediaToDelete.VideoPath)))
             {
-                System.IO.File.Delete(Path.Combine(_configuration["ConnectionDetails:RootLocation"]!, mediaToDelete.VideoPath));
+                System.IO.File.Delete(Path.Combine(_configuration["Paths:Root"]!, mediaToDelete.VideoPath));
             }
 
             await _MediaRepository.Delete(mediaToDelete);
@@ -207,14 +207,14 @@ namespace MyMDb.Services
 
             if (Environment.OSVersion.Platform == PlatformID.Win32NT)
             {
-                // Pe Windows
-                scriptPath = Path.Combine(Directory.GetCurrentDirectory(), "convert_to_mp4_aac.bat");
+                // Windows
+                scriptPath = Path.Combine(Directory.GetCurrentDirectory(), "shell_scripts\\convert_to_mp4_aac.bat");
                 shell = "cmd.exe";
             }
             else
             {
-                // Pe Linux
-                scriptPath = Path.Combine(Directory.GetCurrentDirectory(), "convert_to_mp4_aac.sh"); ;
+                // Linux
+                scriptPath = Path.Combine(Directory.GetCurrentDirectory(), "shell_scripts\\convert_to_mp4_aac.sh"); ;
                 shell = "/bin/bash";
             }
 
