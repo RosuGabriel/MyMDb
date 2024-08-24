@@ -78,12 +78,12 @@ System.String? connectionString;
 if (isLinux)
 {
     connectionString = builder.Configuration.GetConnectionString("LinuxDefaultConnection") ??
-        throw new InvalidOperationException("Connection string 'DefaultConnection not found!'");
+        throw new InvalidOperationException("Connection string 'DefaultConnection for Linux not found!'");
 }
 else
 {
     connectionString = builder.Configuration.GetConnectionString("WindowsDefaultConnection") ??
-        throw new InvalidOperationException("Connection string 'DefaultConnection not found!'");
+        throw new InvalidOperationException("Connection string 'DefaultConnection for Windows not found!'");
 }
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>

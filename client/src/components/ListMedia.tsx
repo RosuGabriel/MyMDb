@@ -10,11 +10,10 @@ const ListMedia: React.FC = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const initialMediaType =
-    (queryParams.get("type") as "movies" | "series" | "movies&series") ||
-    "movies&series";
-  const [mediaType, setMediaType] = useState<
-    "movies" | "series" | "movies&series"
-  >(initialMediaType);
+    (queryParams.get("type") as "movies" | "series" | "all") || "all";
+  const [mediaType, setMediaType] = useState<"movies" | "series" | "all">(
+    initialMediaType
+  );
   const [media, setMedia] = useState<Media[]>([]);
   const defaultImage = "film.png";
 
@@ -22,13 +21,19 @@ const ListMedia: React.FC = () => {
     const fetchMediaList = async () => {
       let fetchedMedia: Media[] = [];
 
-      if (mediaType === "movies&series") {
+      if (mediaType === "all") {
         fetchedMedia = await fetchMedia();
       } else if (mediaType === "movies") {
         fetchedMedia = await fetchMovies();
       } else if (mediaType === "series") {
         fetchedMedia = await fetchSeries();
       }
+
+      fetchedMedia.sort((a, b) => {
+        return (
+          new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime()
+        );
+      });
 
       const updatedMedia = await Promise.all(
         fetchedMedia.map(async (m) => {
@@ -45,15 +50,9 @@ const ListMedia: React.FC = () => {
     fetchMediaList();
   }, [mediaType]);
 
-  const handleMediaTypeChange = (
-    type: "movies" | "series" | "movies&series"
-  ) => {
+  const handleMediaTypeChange = (type: "movies" | "series" | "all") => {
     setMediaType(type);
     navigate(`?type=${type}`);
-  };
-
-  const handleClick = (mediaId: string) => {
-    navigate("/media/" + mediaId);
   };
 
   const handleImageSrcError = (
@@ -68,10 +67,8 @@ const ListMedia: React.FC = () => {
       <div className="btn-group p-3 mb-4 media-buttons" role="group">
         <button
           type="button"
-          className={`btn btn-dark ${
-            mediaType === "movies&series" ? "active" : ""
-          }`}
-          onClick={() => handleMediaTypeChange("movies&series")}
+          className={`btn btn-dark ${mediaType === "all" ? "active" : ""}`}
+          onClick={() => handleMediaTypeChange("all")}
         >
           All
         </button>
@@ -90,15 +87,16 @@ const ListMedia: React.FC = () => {
           Series
         </button>
       </div>
+
       <div className="container">
         <div className="row d-flex">
           {media.map((m) => (
-            <div
-              className="col-sm-6 col-md-4 col-lg-3 mb-4"
+            <a
+              className="col-6 col-sm-6 col-md-4 col-lg-3 mb-4 text-decoration-none"
               key={m.id}
-              onClick={() => handleClick(m.id)}
+              href={"/media/" + m.id}
             >
-              <div className="card media-card btn btn-dark text-white h-100">
+              <div className="card media-card btn btn-dark text-secondary h-100">
                 <img
                   src={m.posterPath}
                   onError={handleImageSrcError}
@@ -109,7 +107,7 @@ const ListMedia: React.FC = () => {
                   <h5 className="card-title">{m.title}</h5>
                 </div>
               </div>
-            </div>
+            </a>
           ))}
         </div>
       </div>

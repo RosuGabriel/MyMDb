@@ -149,9 +149,12 @@ export const createEpisode = async (
   }
 
   if (video) {
-    const videoName = `S${newEpisode.seasonNumber?.toString() || ""}-E${
-      newEpisode.episodeNumber?.toString() || ""
-    }.${getFileExtension(video.name)}`;
+    const videoName = await generateUniqueFileName(
+      `S${newEpisode.seasonNumber?.toString() || ""}-E${
+        newEpisode.episodeNumber?.toString() || ""
+      }`,
+      video
+    );
     formData.append("video", video, videoName);
     formData.append("videoPath", videoName);
   }
@@ -168,7 +171,7 @@ export const createEpisode = async (
 
     return response.data;
   } catch (error) {
-    console.error("Error creating series:", error);
+    console.error("Error creating episode:", error);
     throw error;
   }
 };
@@ -192,6 +195,7 @@ const generateUniqueFileName = async (
   }
   //const baseName = file.name.replace(`.${extension}`, "");
   //const timestamp = Date.now();
+  title.replace("?", "");
   const uniqueFileName = `${title}.${extension}`;
   return uniqueFileName;
 };

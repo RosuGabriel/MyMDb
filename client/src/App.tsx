@@ -19,6 +19,7 @@ const App: React.FC = () => {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Navigate to="/media" />} />
+            <Route path="*" element={<Navigate to="/media" />} />
             <Route path="/media" element={<ListMedia />} />
             <Route path="/media/:id" element={<ShowMedia />} />
             <Route path="/create" element={<CreateMedia />} />
@@ -26,7 +27,6 @@ const App: React.FC = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="*" element={<Navigate to="/media" />} />
             <Route path="/add-review/:id" element={<AddReview />} />
           </Routes>
         </BrowserRouter>
