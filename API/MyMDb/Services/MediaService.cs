@@ -214,7 +214,7 @@ namespace MyMDb.Services
             else
             {
                 // Linux
-                scriptPath = Path.Combine(Directory.GetCurrentDirectory(), "shell_scripts\\convert_to_mp4_aac.sh"); ;
+                scriptPath = Path.Combine(Directory.GetCurrentDirectory(), "shell_scripts/convert_to_mp4_aac.sh"); ;
                 shell = "/bin/bash";
             }
 
@@ -222,8 +222,8 @@ namespace MyMDb.Services
             {
                 FileName = shell,
                 Arguments = (Environment.OSVersion.Platform == PlatformID.Win32NT)
-                            ? $"/c \"{scriptPath} \"{videoPath}\"\""
-                            : $"-c \"{scriptPath} \"{videoPath}\"\"",
+                            ? $"/c \"{scriptPath}\" \"{videoPath}\""
+                            : $"-c \"{scriptPath}\" \"{videoPath}\"",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -252,8 +252,6 @@ namespace MyMDb.Services
             {
                 Console.WriteLine($"An error occurred: {ex.Message}");
             }
-
-            Console.WriteLine("sf");
         }
     }
 }

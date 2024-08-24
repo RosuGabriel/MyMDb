@@ -122,6 +122,44 @@ const ShowMedia: React.FC<{ mediaId: string; season: number }> = ({
 
 const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
   const { title, posterPath, releaseDate, description } = media;
+  const [episodes, setEpisodes] = useState<Media[]>([]);
+  const [prevEpisodeId, setPrevEpisodeId] = useState<string | null>(null);
+  const [nextEpisodeId, setNextEpisodeId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const getEpisodes = async () => {
+      try {
+        const fetchedEpisodes = (await fetchMediaById(media.series?.id))
+          .episodes.$values;
+        setEpisodes(fetchedEpisodes);
+      } catch (error) {
+        console.error("Error fetching other episodes:", error);
+      }
+    };
+
+    if (media.series?.id) {
+      getEpisodes();
+    }
+  }, [media.series?.id]);
+
+  useEffect(() => {
+    const currentSeasonEpisodes = episodes.filter(
+      (ep) => ep.seasonNumber === media.seasonNumber
+    );
+
+    setPrevEpisodeId(
+      currentSeasonEpisodes.find(
+        (ep) => ep.episodeNumber === (media.episodeNumber || 0) - 1
+      )?.id || null
+    );
+
+    setNextEpisodeId(
+      currentSeasonEpisodes.find(
+        (ep) => ep.episodeNumber === (media.episodeNumber || 0) + 1
+      )?.id || null
+    );
+  }, [episodes, media.seasonNumber, media.episodeNumber]);
+
   return (
     <div className="container mt-4">
       {media.videoPath && (
@@ -140,17 +178,41 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
         </div>
         <div className="col-md-8">
           <br />
-          <h2>{media.title == "N/A" ? "" : media.title}</h2>
-          {media.mediaType == "Episode" &&
+          <h2>{title === "N/A" ? "" : title}</h2>
+          {media.mediaType === "Episode" &&
             media.episodeNumber &&
             media.seasonNumber && (
-              <h3>
-                {media.series.title} - Season {media.seasonNumber} | Episode{" "}
-                {media.episodeNumber}
-              </h3>
+              <>
+                <div
+                  className="btn-group mb-3"
+                  role="group"
+                  aria-label="Episodes navigation"
+                >
+                  {prevEpisodeId && (
+                    <a
+                      href={`/media/${prevEpisodeId}`}
+                      className="btn btn-secondary me-2"
+                    >
+                      Prev Episode
+                    </a>
+                  )}
+                  {nextEpisodeId && (
+                    <a
+                      href={`/media/${nextEpisodeId}`}
+                      className="btn btn-secondary"
+                    >
+                      Next Episode
+                    </a>
+                  )}
+                </div>
+                <h3>{media.series.title} </h3>
+                <h4>
+                  Season {media.seasonNumber} | Episode {media.episodeNumber}
+                </h4>
+              </>
             )}
-          {media.releaseDate && (
-            <p>Release date: {releaseDate?.toLocaleDateString()}</p>
+          {releaseDate && (
+            <p>Release date: {releaseDate.toLocaleDateString()}</p>
           )}
           <p>{description}</p>
         </div>
@@ -198,22 +260,27 @@ const ShowSeries: React.FC<Media & { selectedSeason: number }> = (series) => {
             episodes.$values.filter(
               (episode: Media) => episode.seasonNumber === season
             ).length ? (
-              <div className="episode-list mt-4 d-flex justify-content-start flex-wrap">
-                {episodes.$values
-                  .filter((episode: Media) => episode.seasonNumber === season)
-                  .sort(
-                    (a: Media, b: Media) => a.episodeNumber - b.episodeNumber
-                  )
-                  .map((episode: Media) => (
-                    <div key={episode.id}>
-                      <a
-                        href={`/media/${episode.id}`}
-                        className="btn btn-dark me-2 mb-2"
+              <div className="container mt-4">
+                <div className="episode-list d-flex row">
+                  {episodes.$values
+                    .filter((episode: Media) => episode.seasonNumber === season)
+                    .sort(
+                      (a: Media, b: Media) => a.episodeNumber - b.episodeNumber
+                    )
+                    .map((episode: Media) => (
+                      <div
+                        key={episode.id}
+                        className="col-6 col-sm-3 col-md-3 col-lg-3 mb-2"
                       >
-                        Episode {episode.episodeNumber}
-                      </a>
-                    </div>
-                  ))}
+                        <a
+                          href={`/media/${episode.id}`}
+                          className="btn btn-dark w-100"
+                        >
+                          Episode {episode.episodeNumber}
+                        </a>
+                      </div>
+                    ))}
+                </div>
               </div>
             ) : (
               <h5 className="mt-4 d-flex justify-content-start">

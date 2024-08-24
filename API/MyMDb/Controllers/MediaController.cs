@@ -18,6 +18,7 @@ namespace MyMDb.Controllers
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
         private readonly ApplicationDbContext _context;
+        private readonly int bufferSize;
 
         public MediaController(IMediaService mediaService, IMapper mapper, IConfiguration configuration, ApplicationDbContext context)
         {
@@ -25,24 +26,13 @@ namespace MyMDb.Controllers
             _mapper = mapper;
             _configuration = configuration;
             _context = context;
-        }
-
-        [HttpGet]
-        [Route("test")]
-        public IActionResult TestConnection()
-        {
-            try
+            if (_configuration["VideoBufferSize"] != null)
             {
-                _context.Database.GetDbConnection().Open();
-                return Ok("Database connection is successful.");
+                bufferSize = int.Parse(_configuration["VideoBufferSize"]!);
             }
-            catch (Exception ex)
+            else 
             {
-                return StatusCode(500, $"Database connection failed: {ex.Message}");
-            }
-            finally
-            {
-                _context.Database.GetDbConnection().Close();
+                bufferSize = 10000;
             }
         }
 
@@ -190,13 +180,17 @@ namespace MyMDb.Controllers
 
                 newMovie.VideoPath = _configuration["Paths:Videos"] + newMovie.VideoPath;
 
-                using (var stream = new FileStream(_configuration["Paths:Root"] + newMovie.VideoPath, FileMode.Create))
-                {
-                    await video.CopyToAsync(stream);
-                }
+                //Task.Run (async () =>
+                //{
+                    using (var stream = new FileStream(_configuration["Paths:Root"] + newMovie.VideoPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite, bufferSize, FileOptions.WriteThrough | FileOptions.Asynchronous))
+                    {
+                        await video.CopyToAsync(stream);
+                    }
 
-                // Process the vide to make it browser accepted without blocking execution
-                _mediaService.NormalizeVideo(_configuration["Paths:Root"]! + newMovie.VideoPath);
+                    // Process the vide to make it browser accepted without blocking execution
+                    _mediaService.NormalizeVideo(_configuration["Paths:Root"]! + newMovie.VideoPath);
+                //}
+                //);
             }
 
             newMovie = await _mediaService.AddMovie(newMovie);
@@ -304,10 +298,12 @@ namespace MyMDb.Controllers
 
                 newEpisode.VideoPath = Path.Combine(_configuration["Paths:Videos"]!, series.Title, newEpisode.VideoPath);
 
-                using (var stream = new FileStream(_configuration["Paths:Root"] + newEpisode.VideoPath, FileMode.Create))
+                using (var stream = new FileStream(_configuration["Paths:Root"] + newEpisode.VideoPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite, bufferSize, FileOptions.WriteThrough | FileOptions.Asynchronous))
                 {
                     await video.CopyToAsync(stream);
                 }
+
+                _mediaService.NormalizeVideo(_configuration["Paths:Root"]! + newEpisode.VideoPath);
             }
 
             newEpisode = await _mediaService.AddEpisode(newEpisode);

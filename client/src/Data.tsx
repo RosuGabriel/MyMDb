@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 
-export const API_URL = "http://api_address.com/";
+export const API_URL = "https://api_address.com/";
 
 export let axiosInstance: AxiosInstance = axios.create({
   baseURL: API_URL + "api/",
@@ -28,8 +28,8 @@ setAxiosInterceptors();
 
 export interface Media {
   id: string;
-  createDate: Date;
-  modifiedDate: Date;
+  dateCreated: Date;
+  dateModified: Date;
   title: string;
   description: string;
   mediaType: "Movie" | "Series" | "Episode";
@@ -41,6 +41,7 @@ export interface Media {
   seasons: number;
   series: Media;
   episodes: { $values: Media[] };
+  seriesId: string;
   reviews: { $values: Review[] };
 }
 
