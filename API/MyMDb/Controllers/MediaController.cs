@@ -158,17 +158,19 @@ namespace MyMDb.Controllers
                     return BadRequest("No path provided for poster.");
                 }
 
-                newMovie.PosterPath = _configuration["Paths:Images"] + newMovie.PosterPath;
+                newMovie.PosterPath = _configuration["Paths:Images"] + newMovie.PosterPath.Replace("?", "").Replace(":", "");
 
-                using (var stream = new FileStream(_configuration["Paths:Root"] + newMovie.PosterPath, FileMode.Create))
+                _ = Task.Run(async () =>
                 {
-                    await poster.CopyToAsync(stream);
-                }
+                    using (var stream = new FileStream(_configuration["Paths:Root"] + newMovie.PosterPath, FileMode.Create))
+                    {
+                        await poster.CopyToAsync(stream);
+                    }
+                });
             }
 
             if (video != null)
-            { 
-
+            {
                 if (!Extensions.IsVideoFile(video.FileName))
                 {
                     return BadRequest("Not a video file provided for video.");
@@ -178,19 +180,14 @@ namespace MyMDb.Controllers
                     return BadRequest("No path provided for video.");
                 }
 
-                newMovie.VideoPath = _configuration["Paths:Videos"] + newMovie.VideoPath;
+                newMovie.VideoPath = _configuration["Paths:Videos"] + newMovie.VideoPath.Replace("?", "").Replace(":", "");
 
-                //Task.Run (async () =>
-                //{
-                    using (var stream = new FileStream(_configuration["Paths:Root"] + newMovie.VideoPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite, bufferSize, FileOptions.WriteThrough | FileOptions.Asynchronous))
-                    {
-                        await video.CopyToAsync(stream);
-                    }
+                using (var stream = new FileStream(_configuration["Paths:Root"] + newMovie.VideoPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite, bufferSize, FileOptions.WriteThrough | FileOptions.Asynchronous))
+                {
+                    await video.CopyToAsync(stream);
+                }
 
-                    // Process the vide to make it browser accepted without blocking execution
-                    _mediaService.NormalizeVideo(_configuration["Paths:Root"]! + newMovie.VideoPath);
-                //}
-                //);
+                await _mediaService.NormalizeVideo(_configuration["Paths:Root"]! + newMovie.VideoPath);
             }
 
             newMovie = await _mediaService.AddMovie(newMovie);
@@ -203,6 +200,7 @@ namespace MyMDb.Controllers
             return Ok(newMovie);
         }
 
+
         [HttpPost]
         [Authorize("admin")]
         [Route("add_series")]
@@ -211,13 +209,13 @@ namespace MyMDb.Controllers
             var newSeries = _mapper.Map<Series>(series);
 
             // Setting up series directory
-            var seriesImagesDirectory = Path.Combine(_configuration["Paths:Root"]!, _configuration["Paths:Images"]!, newSeries.Title);
+            var seriesImagesDirectory = Path.Combine(_configuration["Paths:Root"]!, _configuration["Paths:Images"]!, newSeries.Title.Replace("?", "").Replace(":", ""));
             if (!Directory.Exists(seriesImagesDirectory))
             {
                 Directory.CreateDirectory(seriesImagesDirectory);
             }
 
-            var seriesVideosDirectory = Path.Combine(_configuration["Paths:Root"]!, _configuration["Paths:Videos"]!, newSeries.Title);
+            var seriesVideosDirectory = Path.Combine(_configuration["Paths:Root"]!, _configuration["Paths:Videos"]!, newSeries.Title.Replace("?", "").Replace(":", ""));
             if (!Directory.Exists(seriesVideosDirectory))
             {
                 Directory.CreateDirectory(seriesVideosDirectory);
@@ -234,7 +232,7 @@ namespace MyMDb.Controllers
                     return BadRequest("No path provided for poster");
                 }
 
-                newSeries.PosterPath = Path.Combine(_configuration["Paths:Images"]!, newSeries.Title, newSeries.PosterPath);
+                newSeries.PosterPath = Path.Combine(_configuration["Paths:Images"]!, newSeries.Title, newSeries.PosterPath).Replace("?", "").Replace(":", "");
 
                 using (var stream = new FileStream(_configuration["Paths:Root"] + newSeries.PosterPath, FileMode.Create))
                 {
@@ -277,7 +275,7 @@ namespace MyMDb.Controllers
                     return BadRequest("No path provided for poster");
                 }
 
-                newEpisode.PosterPath = Path.Combine(_configuration["Paths:Images"]!, series.Title, newEpisode.PosterPath);
+                newEpisode.PosterPath = Path.Combine(_configuration["Paths:Images"]!, series.Title, newEpisode.PosterPath).Replace("?", "").Replace(":", "");
 
                 using (var stream = new FileStream(_configuration["Paths:Root"] + newEpisode.PosterPath, FileMode.Create))
                 {
@@ -296,14 +294,14 @@ namespace MyMDb.Controllers
                     return BadRequest("No path provided for video");
                 }
 
-                newEpisode.VideoPath = Path.Combine(_configuration["Paths:Videos"]!, series.Title, newEpisode.VideoPath);
+                newEpisode.VideoPath = Path.Combine(_configuration["Paths:Videos"]!, series.Title, newEpisode.VideoPath).Replace("?", "").Replace(":", "");
 
                 using (var stream = new FileStream(_configuration["Paths:Root"] + newEpisode.VideoPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite, bufferSize, FileOptions.WriteThrough | FileOptions.Asynchronous))
                 {
                     await video.CopyToAsync(stream);
                 }
 
-                _mediaService.NormalizeVideo(_configuration["Paths:Root"]! + newEpisode.VideoPath);
+                await _mediaService.NormalizeVideo(_configuration["Paths:Root"]! + newEpisode.VideoPath);                
             }
 
             newEpisode = await _mediaService.AddEpisode(newEpisode);

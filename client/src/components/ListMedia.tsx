@@ -96,15 +96,15 @@ const ListMedia: React.FC = () => {
               key={m.id}
               href={"/media/" + m.id}
             >
-              <div className="card media-card btn btn-dark text-secondary h-100">
+              <div className="card media-card btn btn-dark text-secondary h-100 d-flex flex-column">
                 <img
                   src={m.posterPath}
                   onError={handleImageSrcError}
                   alt={m.title}
                   className="card-img-top media-card-img rounded"
                 />
-                <div className="card-body">
-                  <h5 className="card-title">{m.title}</h5>
+                <div className="card-body d-flex justify-content-center align-items-center flex-grow-1">
+                  <h5 className="card-title m-0 text-center">{m.title}</h5>
                 </div>
               </div>
             </a>
