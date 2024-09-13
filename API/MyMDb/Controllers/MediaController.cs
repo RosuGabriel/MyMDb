@@ -7,6 +7,7 @@ using MyMDb.Data;
 using Microsoft.AspNetCore.Authorization;
 using System.IO;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace MyMDb.Controllers
 {
@@ -142,6 +143,60 @@ namespace MyMDb.Controllers
 
         [HttpPost]
         [Authorize("admin")]
+        [Route("add_attribute")]
+        public async Task<IActionResult> AddAttribute([FromForm] MediaAttributeDto attributeDto, IFormFile? file)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var media = await _mediaService.GetById(attributeDto.MediaId);
+
+            if (media == null)
+            {
+                return NotFound("Media for attribute not found");
+            }
+
+            if (file == null) 
+            {
+                return BadRequest("Attribute file not existent");
+            }
+
+            var extension = Path.GetExtension(file.FileName);
+            if (extension == null)
+            {
+                return BadRequest("File does not have an extension");
+            }
+            if (extension == "srt")
+            {
+                extension = "vtt";
+            }
+
+            if (media.VideoPath != null)
+            {
+                attributeDto.AttributePath = Path.ChangeExtension(media.VideoPath, null) + "_" + attributeDto.Type + "_" + attributeDto.Language + "." + extension;
+
+            }
+            else
+            {
+                return BadRequest("Media must have a video for adding an attribute");
+            }
+
+            using (var stream = new FileStream(_configuration["Paths:Root"] + attributeDto.AttributePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var attribute = _mapper.Map<MediaAttribute>(attributeDto);
+
+            var newAttribute = await _mediaService.AddAttribute(attribute);
+
+            return Ok(newAttribute);
+        }
+
+        [HttpPost]
+        [Authorize("admin")]
         [Route("add_movie")]
         public async Task<IActionResult> AddMovie([FromForm] MovieDto movie, IFormFile? poster, IFormFile? video)
         {
@@ -160,13 +215,10 @@ namespace MyMDb.Controllers
 
                 newMovie.PosterPath = _configuration["Paths:Images"] + newMovie.PosterPath.Replace("?", "").Replace(":", "");
 
-                _ = Task.Run(async () =>
+                using (var stream = new FileStream(_configuration["Paths:Root"] + newMovie.PosterPath, FileMode.Create))
                 {
-                    using (var stream = new FileStream(_configuration["Paths:Root"] + newMovie.PosterPath, FileMode.Create))
-                    {
-                        await poster.CopyToAsync(stream);
-                    }
-                });
+                    await poster.CopyToAsync(stream);
+                }
             }
 
             if (video != null)

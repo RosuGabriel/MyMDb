@@ -1,13 +1,14 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import ListMedia from "./components/ListMedia";
 import { CreateMedia, AddEpisode } from "./components/CreateMedia";
+import ListMedia from "./components/ListMedia";
 import AddReview from "./components/AddReview";
 import Register from "./components/Register";
 import Login from "./components/Login";
 import ShowMedia from "./components/ShowMedia";
 import Navbar from "./components/Navbar";
 import Profile from "./components/Profile";
+import AddAttribute from "./components/AddAttribute";
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -28,6 +29,7 @@ const App: React.FC = () => {
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/add-review/:id" element={<AddReview />} />
+            <Route path="/add-attribute/:id" element={<AddAttribute />} />
           </Routes>
         </BrowserRouter>
       </div>

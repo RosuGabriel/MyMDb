@@ -104,6 +104,14 @@ const ShowMedia: React.FC<{ mediaId: string; season: number }> = ({
               >
                 Delete Media
               </button>
+              {media.mediaType !== "Series" && (
+                <a
+                  className="btn btn-primary"
+                  href={"/add-attribute/" + media.id}
+                >
+                  Add Attribute
+                </a>
+              )}
             </div>
           )}
           {media.reviews && (
@@ -122,6 +130,7 @@ const ShowMedia: React.FC<{ mediaId: string; season: number }> = ({
 
 const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
   const { title, posterPath, releaseDate, description } = media;
+  const attributes = media.mediaAttributes && media.mediaAttributes.$values;
   const [episodes, setEpisodes] = useState<Media[]>([]);
   const [prevEpisodeId, setPrevEpisodeId] = useState<string | null>(null);
   const [nextEpisodeId, setNextEpisodeId] = useState<string | null>(null);
@@ -167,6 +176,25 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
           <div className="col-12 col-md-8">
             <video controls className="video-fluid w-100">
               <source src={API_URL + media.videoPath} type="video/mp4" />
+              {attributes &&
+                attributes.map((attribute) => {
+                  if (attribute.type === "Subtitle") {
+                    return (
+                      <track
+                        key={attribute.language}
+                        kind="subtitles"
+                        src={API_URL + attribute.attributePath}
+                        srcLang={attribute.language}
+                        label={attribute.language}
+                      />
+                    );
+                  }
+                  if (attribute.type === "Dubbing") {
+                    // this is not implemented yet
+                    return null;
+                  }
+                  return null;
+                })}
               Your browser does not support the video tag.
             </video>
           </div>

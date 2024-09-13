@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MyMDb.Data;
 
@@ -11,9 +12,11 @@ using MyMDb.Data;
 namespace MyMDb.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240912073239_Initial")]
+    partial class Initial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -51,13 +54,13 @@ namespace MyMDb.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "340773b6-3bee-4995-bd42-6aeb61372df2",
+                            Id = "33c1d47b-c3ba-4b79-91b4-b61a7d38b30a",
                             Name = "admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "dddd1f37-5705-46ac-9721-f0976820f188",
+                            Id = "d5cd2a29-2f30-4dec-a820-f90d5270b0f8",
                             Name = "user",
                             NormalizedName = "USER"
                         });
@@ -152,13 +155,13 @@ namespace MyMDb.Migrations
                     b.HasData(
                         new
                         {
-                            UserId = "67fe61a3-a5a0-4966-b841-68b233355708",
-                            RoleId = "340773b6-3bee-4995-bd42-6aeb61372df2"
+                            UserId = "9165f7a3-0768-4c70-aa94-69af060cfcb8",
+                            RoleId = "33c1d47b-c3ba-4b79-91b4-b61a7d38b30a"
                         },
                         new
                         {
-                            UserId = "67fe61a3-a5a0-4966-b841-68b233355708",
-                            RoleId = "dddd1f37-5705-46ac-9721-f0976820f188"
+                            UserId = "9165f7a3-0768-4c70-aa94-69af060cfcb8",
+                            RoleId = "d5cd2a29-2f30-4dec-a820-f90d5270b0f8"
                         });
                 });
 
@@ -248,17 +251,17 @@ namespace MyMDb.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "67fe61a3-a5a0-4966-b841-68b233355708",
+                            Id = "9165f7a3-0768-4c70-aa94-69af060cfcb8",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "07f46947-8aba-4098-bbf6-4746064c8401",
+                            ConcurrencyStamp = "8c6ea096-0d91-4bd7-be38-016e98ff8717",
                             Email = "admin@admin.com",
                             EmailConfirmed = true,
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@ADMIN.COM",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMOy8SH3B93QYXQ+ELAMa/OFKJs5KZp3NYAhYEgdjsqlvRZ76lYiZ3MAiaDTcLw6Dw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEN6VtT6Jc5BI2jmyUDdaaWmQFu804zDU9ecBt3YbjCRfG49SGnfq5OryiczE+u/OYQ==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "2c55c946-e367-40f2-ae1d-1b27c6ea135f",
+                            SecurityStamp = "a9ab9a50-88f3-4d18-a7ef-808d14eb4432",
                             TwoFactorEnabled = false,
                             UserName = "admin"
                         });
@@ -304,6 +307,37 @@ namespace MyMDb.Migrations
                     b.HasDiscriminator<string>("MediaType").HasValue("Media");
 
                     b.UseTphMappingStrategy();
+                });
+
+            modelBuilder.Entity("MyMDb.Models.MediaAttribute", b =>
+                {
+                    b.Property<Guid?>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AttributePath")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Language")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("MediaId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Type")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MediaId");
+
+                    b.ToTable("MediaAttributes");
                 });
 
             modelBuilder.Entity("MyMDb.Models.Review", b =>
@@ -370,7 +404,8 @@ namespace MyMDb.Migrations
                     b.HasData(
                         new
                         {
-                            UserId = "67fe61a3-a5a0-4966-b841-68b233355708"
+                            UserId = "9165f7a3-0768-4c70-aa94-69af060cfcb8",
+                            UserName = "Admin"
                         });
                 });
 
@@ -460,6 +495,17 @@ namespace MyMDb.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MyMDb.Models.MediaAttribute", b =>
+                {
+                    b.HasOne("MyMDb.Models.Media", "Media")
+                        .WithMany("MediaAttributes")
+                        .HasForeignKey("MediaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Media");
+                });
+
             modelBuilder.Entity("MyMDb.Models.Review", b =>
                 {
                     b.HasOne("MyMDb.Models.Media", "Media")
@@ -508,6 +554,8 @@ namespace MyMDb.Migrations
 
             modelBuilder.Entity("MyMDb.Models.Media", b =>
                 {
+                    b.Navigation("MediaAttributes");
+
                     b.Navigation("Reviews");
                 });
 

@@ -4,7 +4,7 @@ import {
   Creditentials,
   axiosInstance,
   setAxiosInterceptors,
-  userProfile,
+  UserProfile,
 } from "../Data";
 
 export const register = async (email: string, password: string) => {
@@ -100,7 +100,7 @@ const saveTokenSession = (creditentials: Creditentials) => {
   sessionStorage.setItem("creditentials", JSON.stringify(creditentials));
 };
 
-export const fetchProfile = async (): Promise<userProfile> => {
+export const fetchProfile = async (): Promise<UserProfile> => {
   try {
     const response = await axiosInstance.get("user/profile");
     return response.data;
