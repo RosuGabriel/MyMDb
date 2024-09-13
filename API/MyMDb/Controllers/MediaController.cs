@@ -168,6 +168,7 @@ namespace MyMDb.Controllers
             {
                 return BadRequest("File does not have an extension");
             }
+            // Saved as vtt but still needs conversion, this is for not editing the path again after the conversion
             if (extension == "srt")
             {
                 extension = "vtt";
@@ -176,7 +177,6 @@ namespace MyMDb.Controllers
             if (media.VideoPath != null)
             {
                 attributeDto.AttributePath = Path.ChangeExtension(media.VideoPath, null) + "_" + attributeDto.Type + "_" + attributeDto.Language + "." + extension;
-
             }
             else
             {
