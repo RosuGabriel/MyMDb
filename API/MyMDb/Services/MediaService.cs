@@ -8,12 +8,14 @@ namespace MyMDb.Services
     public class MediaService : IMediaService
     {
         private readonly IMediaRepository _MediaRepository;
+        private readonly IMediaAttributeRepository _MediaAttributeRepository;
         private readonly IConfiguration _configuration;
 
-        public MediaService(IMediaRepository MediaRepository, IConfiguration configuration)
+        public MediaService(IMediaRepository MediaRepository, IConfiguration configuration, IMediaAttributeRepository mediaAttributeRepository)
         {
             _MediaRepository = MediaRepository;
             _configuration = configuration;
+            _MediaAttributeRepository = mediaAttributeRepository;
         }
 
         // getting
@@ -252,6 +254,12 @@ namespace MyMDb.Services
             {
                 Console.WriteLine($"An error occurred: {ex.Message}");
             }
+        }
+
+        public async Task<MediaAttribute> AddAttribute(MediaAttribute mediaAttribute)
+        {
+            mediaAttribute.Initialize();
+            return await _MediaAttributeRepository.AddAsync(mediaAttribute);
         }
     }
 }

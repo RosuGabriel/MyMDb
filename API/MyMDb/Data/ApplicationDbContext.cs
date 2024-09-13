@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using MyMDb.Models;
-using System.Reflection.Emit;
 
 namespace MyMDb.Data
 {
@@ -16,6 +15,7 @@ namespace MyMDb.Data
         public DbSet<UserProfile> UserProfiles { get; set; }
         public DbSet<Media> Media { get; set; }
         public DbSet<Review> Reviews { get; set; }
+        public DbSet<MediaAttribute> MediaAttributes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -80,6 +80,12 @@ namespace MyMDb.Data
                 .HasOne(p => p.User)
                 .WithOne(u => u.UserProfile)
                 .HasForeignKey<UserProfile>(p => p.UserId);
+
+            // attributes - media
+            builder.Entity<Media>()
+                .HasMany(m => m.MediaAttributes)
+                .WithOne(ma => ma.Media)
+                .HasForeignKey(ma => ma.MediaId);
 
             // movie types (movie, series or episode)
             builder.Entity<Media>()

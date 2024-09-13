@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { API_URL, userProfile } from "../Data";
+import { API_URL, UserProfile } from "../Data";
 import {
   fetchProfile,
   updateProfile,
@@ -8,7 +8,7 @@ import {
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const Profile: React.FC = () => {
-  const [profile, setProfile] = useState<userProfile | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [newUsername, setNewUsername] = useState("");
   const [newProfilePic, setNewProfilePic] = useState<File | null>(null);

@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.ViewEngines;
-using MyMDb.Models.Base;
-using MyMDb.Data;
+﻿using MyMDb.Models.Base;
 
 namespace MyMDb.Models
 {
@@ -14,6 +12,7 @@ namespace MyMDb.Models
         public string? MediaType { get; set; }
 
         public virtual ICollection<Review>? Reviews { get; set; }
+        public virtual ICollection<MediaAttribute>? MediaAttributes { get; set; }
 
         public Media()
         {

@@ -109,6 +109,7 @@ namespace MyMDb.Repositories
                 .Where(m  => m.Id == id)
                 .Include(m => m.Reviews!)
                 .ThenInclude(r => r.UserProfile)
+                .Include(m => m.MediaAttributes)
                 .FirstOrDefaultAsync();
         }
 
@@ -131,6 +132,7 @@ namespace MyMDb.Repositories
                 .Include(e => e.Series)
                 .Include(e => e.Reviews!)
                 .ThenInclude(r => r.UserProfile)
+                .Include(e => e.MediaAttributes)
                 .FirstOrDefaultAsync();
         }
 

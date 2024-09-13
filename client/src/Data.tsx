@@ -43,11 +43,12 @@ export interface Media {
   episodes: { $values: Media[] };
   seriesId: string;
   reviews: { $values: Review[] };
+  mediaAttributes: { $values: Attribute[] };
 }
 
 export interface Review {
   id: string;
-  userProfile: userProfile;
+  userProfile: UserProfile;
   userId: string;
   mediaId: string;
   createDate: Date;
@@ -64,8 +65,23 @@ export interface Creditentials {
   token: string;
 }
 
-export interface userProfile {
+export interface UserProfile {
   userId: string;
   userName: string;
   profilePicPath: string;
 }
+
+export interface Attribute {
+  mediaId: string;
+  attributePath: string;
+  type: string;
+  language: string;
+}
+
+export const Languages = [
+  "English",
+  "Română",
+  "Français",
+  "Deutsch",
+  "Español",
+];

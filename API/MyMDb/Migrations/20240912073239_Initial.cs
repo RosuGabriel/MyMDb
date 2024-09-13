@@ -210,6 +210,29 @@ namespace MyMDb.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "MediaAttributes",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    MediaId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Type = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AttributePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Language = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DateModified = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MediaAttributes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_MediaAttributes_Media_MediaId",
+                        column: x => x.MediaId,
+                        principalTable: "Media",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Reviews",
                 columns: table => new
                 {
@@ -243,28 +266,28 @@ namespace MyMDb.Migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { "340773b6-3bee-4995-bd42-6aeb61372df2", null, "admin", "ADMIN" },
-                    { "dddd1f37-5705-46ac-9721-f0976820f188", null, "user", "USER" }
+                    { "33c1d47b-c3ba-4b79-91b4-b61a7d38b30a", null, "admin", "ADMIN" },
+                    { "d5cd2a29-2f30-4dec-a820-f90d5270b0f8", null, "user", "USER" }
                 });
 
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
-                values: new object[] { "67fe61a3-a5a0-4966-b841-68b233355708", 0, "07f46947-8aba-4098-bbf6-4746064c8401", "secret", true, false, null, "secret", "ADMIN", "AQAAAAIAAYagAAAAEMOy8SH3B93QYXQ+ELAMa/OFKJs5KZp3NYAhYEgdjsqlvRZ76lYiZ3MAiaDTcLw6Dw==", null, false, "2c55c946-e367-40f2-ae1d-1b27c6ea135f", false, "admin" });
+                values: new object[] { "9165f7a3-0768-4c70-aa94-69af060cfcb8", 0, "8c6ea096-0d91-4bd7-be38-016e98ff8717", "secret", true, false, null, "secret", "ADMIN", "AQAAAAIAAYagAAAAEN6VtT6Jc5BI2jmyUDdaaWmQFu804zDU9ecBt3YbjCRfG49SGnfq5OryiczE+u/OYQ==", null, false, "a9ab9a50-88f3-4d18-a7ef-808d14eb4432", false, "admin" });
 
             migrationBuilder.InsertData(
                 table: "AspNetUserRoles",
                 columns: new[] { "RoleId", "UserId" },
                 values: new object[,]
                 {
-                    { "340773b6-3bee-4995-bd42-6aeb61372df2", "67fe61a3-a5a0-4966-b841-68b233355708" },
-                    { "dddd1f37-5705-46ac-9721-f0976820f188", "67fe61a3-a5a0-4966-b841-68b233355708" }
+                    { "33c1d47b-c3ba-4b79-91b4-b61a7d38b30a", "9165f7a3-0768-4c70-aa94-69af060cfcb8" },
+                    { "d5cd2a29-2f30-4dec-a820-f90d5270b0f8", "9165f7a3-0768-4c70-aa94-69af060cfcb8" }
                 });
 
             migrationBuilder.InsertData(
                 table: "UserProfiles",
                 columns: new[] { "UserId", "DateCreated", "DateModified", "ProfilePicPath", "UserName" },
-                values: new object[] { "67fe61a3-a5a0-4966-b841-68b233355708", null, null, null, null });
+                values: new object[] { "9165f7a3-0768-4c70-aa94-69af060cfcb8", null, null, null, "Admin" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -311,6 +334,11 @@ namespace MyMDb.Migrations
                 column: "SeriesId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_MediaAttributes_MediaId",
+                table: "MediaAttributes",
+                column: "MediaId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Reviews_MediaId",
                 table: "Reviews",
                 column: "MediaId");
@@ -338,6 +366,9 @@ namespace MyMDb.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUserTokens");
+
+            migrationBuilder.DropTable(
+                name: "MediaAttributes");
 
             migrationBuilder.DropTable(
                 name: "Reviews");

@@ -95,6 +95,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<IMediaRepository, MediaRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IMediaAttributeRepository, MediaAttributeRepository>();
 
 // Services
 builder.Services.AddScoped<IMediaService, MediaService>();
@@ -176,7 +177,7 @@ builder.Services.AddLogging(logging =>
     if (isLinux)
     {
         logging.AddSerilog(new LoggerConfiguration()
-                        .WriteTo.File("/var/www/MyMDb/api/api.log")
+                        .WriteTo.File("/var/www/MyMDb/api.log")
                         .CreateLogger());
     }
 });
