@@ -1,5 +1,5 @@
 import { useParams, useLocation } from "react-router-dom";
-import React, { useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Media, Review, API_URL } from "../Data";
 import { fetchMediaById, deleteMedia } from "../services/MediaService";
@@ -135,6 +135,8 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
   const [prevEpisodeId, setPrevEpisodeId] = useState<string | null>(null);
   const [nextEpisodeId, setNextEpisodeId] = useState<string | null>(null);
 
+  const videoRef = useRef<HTMLVideoElement | null>(null); // referința pentru video
+
   useEffect(() => {
     const getEpisodes = async () => {
       try {
@@ -169,12 +171,42 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
     );
   }, [episodes, media.seasonNumber, media.episodeNumber]);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const video = videoRef.current;
+      if (!video) {
+        return;
+      }
+
+      if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+        event.preventDefault();
+      }
+
+      switch (event.key) {
+        case "ArrowRight":
+          video.currentTime += 5;
+          break;
+        case "ArrowLeft":
+          video.currentTime -= 5;
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown, { capture: true });
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown, { capture: true });
+    };
+  }, []);
+
   return (
     <div className="container mt-4">
       {media.videoPath && (
         <div className="row justify-content-center mb-4">
           <div className="col-12 col-md-8">
-            <video controls className="video-fluid w-100">
+            <video ref={videoRef} controls className="video-fluid w-100">
               <source src={API_URL + media.videoPath} type="video/mp4" />
               {attributes &&
                 attributes.map((attribute) => {

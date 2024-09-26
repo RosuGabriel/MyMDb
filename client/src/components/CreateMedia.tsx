@@ -37,17 +37,16 @@ export const CreateMedia: React.FC = () => {
         (progressEvent.loaded / progressEvent.total) * 100
       );
       setUploadProgress(progress);
+      if (progressEvent.loaded === progressEvent.total) {
+        console.log("Upload complete!");
+        navigate("/media");
+      }
     };
 
     try {
       if (mediaType === "Movie") {
-        const createdMovie = await createMovie(
-          newMedia,
-          image,
-          video,
-          handleUploadProgress
-        );
-        console.log("Movie created successfully:", createdMovie);
+        createMovie(newMedia, image, video, handleUploadProgress);
+        console.log("Uploading movie...");
       } else {
         const createdSeries = await createSeries(
           newMedia,
@@ -56,7 +55,9 @@ export const CreateMedia: React.FC = () => {
         );
         console.log("Series created successfully:", createdSeries);
       }
-      navigate("/media");
+      if (uploadProgress === 100) {
+        navigate("/media");
+      }
     } catch (error) {
       console.error("Error creating media:", error);
     } finally {
@@ -204,17 +205,18 @@ const CreateEpisode: React.FC<{ seriesId: string }> = ({ seriesId: id }) => {
         (progressEvent.loaded / progressEvent.total) * 100
       );
       setUploadProgress(progress);
+      if (progressEvent.loaded === progressEvent.total) {
+        console.log("Upload complete!");
+        navigate("/media" + seriesId);
+      }
     };
 
     try {
-      const createdEpisode = await createEpisode(
-        newEpisode,
-        image,
-        video,
-        handleUploadProgress
-      );
-      console.log("Episode added successfully:", createdEpisode);
-      navigate("/media/" + seriesId);
+      createEpisode(newEpisode, image, video, handleUploadProgress);
+      console.log("Uploading episode...");
+      if (uploadProgress === 100) {
+        navigate("/media" + seriesId);
+      }
     } catch (error) {
       console.error("Error creating media:", error);
     } finally {

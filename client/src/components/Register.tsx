@@ -36,6 +36,7 @@ const RegisterForm: React.FC = () => {
 
   return (
     <form className="register-form" onSubmit={handleSubmit}>
+      <br />
       <div className="mb-3">
         <label htmlFor="email" className="form-label">
           Email

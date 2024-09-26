@@ -101,6 +101,7 @@ builder.Services.AddScoped<IMediaAttributeRepository, MediaAttributeRepository>(
 builder.Services.AddScoped<IMediaService, MediaService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IFileProcessingService, FileProcessingService>();
 
 // Add Identity
 builder.Services.AddIdentity<AppUser, IdentityRole>( options =>

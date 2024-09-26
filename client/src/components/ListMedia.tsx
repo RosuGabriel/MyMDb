@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Media, API_URL } from "../Data";
 import { useNavigate, useLocation } from "react-router";
-import { fetchMedia, fetchMovies, fetchSeries } from "../services/MediaService";
+import { fetchMedia } from "../services/MediaService";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../App.css";
 
@@ -9,25 +9,26 @@ const ListMedia: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
+  const defaultImage = "film.png";
+
   const initialMediaType =
     (queryParams.get("type") as "movies" | "series" | "all") || "all";
+
   const [mediaType, setMediaType] = useState<"movies" | "series" | "all">(
     initialMediaType
   );
-  const [media, setMedia] = useState<Media[]>([]);
-  const defaultImage = "film.png";
 
+  const [allMedia, setAllMedia] = useState<Media[]>([]);
+
+  const [media, setMedia] = useState<Media[]>([]);
+
+  // Fetch media list
   useEffect(() => {
     const fetchMediaList = async () => {
       let fetchedMedia: Media[] = [];
 
-      if (mediaType === "all") {
-        fetchedMedia = await fetchMedia();
-      } else if (mediaType === "movies") {
-        fetchedMedia = await fetchMovies();
-      } else if (mediaType === "series") {
-        fetchedMedia = await fetchSeries();
-      }
+      fetchedMedia = await fetchMedia();
+      const searchQuery = queryParams.get("search");
 
       fetchedMedia.sort((a, b) => {
         return (
@@ -35,7 +36,7 @@ const ListMedia: React.FC = () => {
         );
       });
 
-      const updatedMedia = await Promise.all(
+      let updatedMedia = await Promise.all(
         fetchedMedia.map(async (m) => {
           return {
             ...m,
@@ -44,15 +45,54 @@ const ListMedia: React.FC = () => {
         })
       );
 
+      setAllMedia(updatedMedia);
+
+      // Filter by media type
+      if (mediaType === "movies") {
+        updatedMedia = updatedMedia.filter((m) => m.mediaType === "Movie");
+      } else if (mediaType === "series") {
+        updatedMedia = updatedMedia.filter((m) => m.mediaType === "Series");
+      }
+
+      // Filter by search query
+      if (searchQuery && searchQuery.trim()) {
+        updatedMedia = updatedMedia.filter((m) =>
+          m.title.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      }
+
       setMedia(updatedMedia);
     };
 
     fetchMediaList();
-  }, [mediaType]);
+  }, []);
+
+  // Filter media
+  useEffect(() => {
+    let filteredMedia = allMedia;
+    const searchQuery = queryParams.get("search");
+
+    // Filter by media type
+    if (mediaType === "movies") {
+      filteredMedia = filteredMedia.filter((m) => m.mediaType === "Movie");
+    } else if (mediaType === "series") {
+      filteredMedia = filteredMedia.filter((m) => m.mediaType === "Series");
+    }
+
+    // Filter by search query
+    if (searchQuery && searchQuery.trim()) {
+      filteredMedia = filteredMedia.filter((m) =>
+        m.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    setMedia(filteredMedia);
+  }, [mediaType, location.search, allMedia]);
 
   const handleMediaTypeChange = (type: "movies" | "series" | "all") => {
     setMediaType(type);
-    navigate(`?type=${type}`);
+    queryParams.set("type", type);
+    navigate({ search: queryParams.toString() });
   };
 
   const handleImageSrcError = (
@@ -88,15 +128,15 @@ const ListMedia: React.FC = () => {
         </button>
       </div>
 
-      <div className="container">
+      <div className="container-fluid">
         <div className="row d-flex">
           {media.map((m) => (
             <a
-              className="col-6 col-sm-6 col-md-4 col-lg-3 mb-4 text-decoration-none"
+              className="col-6 col-sm-4 col-md-4 col-lg-3 col-xl-2 mb-4 text-decoration-none"
               key={m.id}
               href={"/media/" + m.id}
             >
-              <div className="card media-card btn btn-dark text-secondary h-100 d-flex flex-column">
+              <div className="card media-card btn btn-dark text-secondary h-100 d-flex flex-column p-1">
                 <img
                   src={m.posterPath}
                   onError={handleImageSrcError}
