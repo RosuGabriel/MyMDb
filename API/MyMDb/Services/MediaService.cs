@@ -210,13 +210,13 @@ namespace MyMDb.Services
             if (Environment.OSVersion.Platform == PlatformID.Win32NT)
             {
                 // Windows
-                scriptPath = Path.Combine(Directory.GetCurrentDirectory(), "shell_scripts\\convert_to_mp4_aac.bat");
+                scriptPath = Path.Combine(Directory.GetCurrentDirectory(), _configuration["Paths:ShellScripts"] + "convert_to_mp4_aac.bat");
                 shell = "cmd.exe";
             }
             else
             {
                 // Linux
-                scriptPath = Path.Combine(Directory.GetCurrentDirectory(), "shell_scripts/convert_to_mp4_aac.sh"); ;
+                scriptPath = Path.Combine(Directory.GetCurrentDirectory(), _configuration["Paths:ShellScripts"] + "convert_to_mp4_aac.sh"); ;
                 shell = "/bin/bash";
             }
 
@@ -260,6 +260,20 @@ namespace MyMDb.Services
         {
             mediaAttribute.Initialize();
             return await _MediaAttributeRepository.AddAsync(mediaAttribute);
+        }
+
+        public string SanitizeFileName(string fileName)
+        {
+            fileName = fileName.Replace("&","and").Replace(":","").Replace("?", "");
+
+            var invalidChars = Path.GetInvalidFileNameChars();
+
+            foreach (var invalidChar in invalidChars)
+            {
+                fileName = fileName.Replace(invalidChar.ToString(), "");
+            }
+
+            return fileName;
         }
     }
 }

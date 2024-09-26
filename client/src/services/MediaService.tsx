@@ -193,9 +193,6 @@ const generateUniqueFileName = async (
   if (extension == "mkv") {
     extension = "mp4";
   }
-  //const baseName = file.name.replace(`.${extension}`, "");
-  //const timestamp = Date.now();
-  title.replace("?", "");
   const uniqueFileName = `${title}.${extension}`;
   return uniqueFileName;
 };

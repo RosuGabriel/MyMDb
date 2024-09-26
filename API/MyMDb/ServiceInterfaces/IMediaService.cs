@@ -34,5 +34,6 @@ namespace MyMDb.ServiceInterfaces
         // others
         public Task NormalizeVideo(string videoPath);
         Task<MediaAttribute> AddAttribute(MediaAttribute mediaAttribute);
+        public string SanitizeFileName(string fileName);
     }
 }

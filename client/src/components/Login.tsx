@@ -22,7 +22,7 @@ const LoginForm: React.FC = () => {
       if (isAdmin()) {
         console.log("User is admin.");
       }
-      navigate("/");
+      navigate(-1);
     } catch (error: any) {
       if (
         error.response &&
@@ -47,6 +47,7 @@ const LoginForm: React.FC = () => {
 
   return (
     <form className="login-form" onSubmit={handleSubmit}>
+      <br />
       <div className="mb-3">
         <label htmlFor="email" className="form-label">
           Email

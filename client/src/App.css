@@ -11,10 +11,10 @@ body,
   text-align: center;
 }
 
-.pt-content {
-  padding-top: 70px;
-}
-
 .media-card {
   background-color: #0f0f0f;
+}
+
+.searchbar {
+  max-width: 300px;
 }

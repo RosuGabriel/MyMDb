@@ -36,8 +36,4 @@
     <Folder Include="wwwroot\profile_pics\" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy &quot;$(ProjectDir)shell_scripts\*.*&quot; &quot;$(TargetDir)shell_scripts&quot; /E /D /I /Y" />
-  </Target>
-
 </Project>

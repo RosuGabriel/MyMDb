@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { CreateMedia, AddEpisode } from "./components/CreateMedia";
 import ListMedia from "./components/ListMedia";
@@ -13,11 +13,35 @@ import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const App: React.FC = () => {
+  const [navbarHeight, setNavbarHeight] = useState(0);
+
+  useEffect(() => {
+    const navbar = document.querySelector(".navbar"); // Selectorul pentru navbar
+    if (navbar) {
+      setNavbarHeight(navbar.scrollHeight + 1); // Obține înălțimea și adaugă 1 pixel
+    }
+
+    const handleResize = () => {
+      if (navbar) {
+        setNavbarHeight(navbar.scrollHeight + 1); // Actualizează înălțimea la redimensionare
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
     <div className="App">
-      <Navbar />
-      <div className="content pt-content px-0 px-md-5 px-lg-5">
-        <BrowserRouter>
+      <BrowserRouter>
+        <Navbar />
+        <div
+          className="content px-0 px-sm-1 px-md-3 px-lg-5 px-xl-5"
+          style={{ paddingTop: `${navbarHeight}px` }}
+        >
           <Routes>
             <Route path="/" element={<Navigate to="/media" />} />
             <Route path="*" element={<Navigate to="/media" />} />
@@ -31,8 +55,8 @@ const App: React.FC = () => {
             <Route path="/add-review/:id" element={<AddReview />} />
             <Route path="/add-attribute/:id" element={<AddAttribute />} />
           </Routes>
-        </BrowserRouter>
-      </div>
+        </div>
+      </BrowserRouter>
     </div>
   );
 };

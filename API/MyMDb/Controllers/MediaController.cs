@@ -16,14 +16,16 @@ namespace MyMDb.Controllers
     public class MediaController : Controller
     {
         private readonly IMediaService _mediaService;
+        private readonly IFileProcessingService _fileProcessingService;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
         private readonly ApplicationDbContext _context;
         private readonly int bufferSize;
 
-        public MediaController(IMediaService mediaService, IMapper mapper, IConfiguration configuration, ApplicationDbContext context)
+        public MediaController(IMediaService mediaService, IFileProcessingService fileProcessingService, IMapper mapper, IConfiguration configuration, ApplicationDbContext context)
         {
             _mediaService = mediaService;
+            _fileProcessingService = fileProcessingService;
             _mapper = mapper;
             _configuration = configuration;
             _context = context;
@@ -183,10 +185,7 @@ namespace MyMDb.Controllers
                 return BadRequest("Media must have a video for adding an attribute");
             }
 
-            using (var stream = new FileStream(_configuration["Paths:Root"] + attributeDto.AttributePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
+            await _fileProcessingService.ProcessFileAsync(file, _configuration["Paths:Root"] + attributeDto.AttributePath);
 
             var attribute = _mapper.Map<MediaAttribute>(attributeDto);
 
@@ -200,6 +199,11 @@ namespace MyMDb.Controllers
         [Route("add_movie")]
         public async Task<IActionResult> AddMovie([FromForm] MovieDto movie, IFormFile? poster, IFormFile? video)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             var newMovie = _mapper.Map<Movie>(movie);
 
             if (poster != null)
@@ -213,12 +217,9 @@ namespace MyMDb.Controllers
                     return BadRequest("No path provided for poster.");
                 }
 
-                newMovie.PosterPath = _configuration["Paths:Images"] + newMovie.PosterPath.Replace("?", "").Replace(":", "");
+                newMovie.PosterPath = _configuration["Paths:Images"] + _mediaService.SanitizeFileName(newMovie.PosterPath);
 
-                using (var stream = new FileStream(_configuration["Paths:Root"] + newMovie.PosterPath, FileMode.Create))
-                {
-                    await poster.CopyToAsync(stream);
-                }
+                await _fileProcessingService.ProcessFileAsync(poster, _configuration["Paths:Root"] + newMovie.PosterPath);
             }
 
             if (video != null)
@@ -232,22 +233,12 @@ namespace MyMDb.Controllers
                     return BadRequest("No path provided for video.");
                 }
 
-                newMovie.VideoPath = _configuration["Paths:Videos"] + newMovie.VideoPath.Replace("?", "").Replace(":", "");
+                newMovie.VideoPath = _configuration["Paths:Videos"] + _mediaService.SanitizeFileName(newMovie.VideoPath);
 
-                using (var stream = new FileStream(_configuration["Paths:Root"] + newMovie.VideoPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite, bufferSize, FileOptions.WriteThrough | FileOptions.Asynchronous))
-                {
-                    await video.CopyToAsync(stream);
-                }
-
-                await _mediaService.NormalizeVideo(_configuration["Paths:Root"]! + newMovie.VideoPath);
+                await _fileProcessingService.ProcessVideoFileAsync(video, _configuration["Paths:Root"] + newMovie.VideoPath, _mediaService, bufferSize);
             }
 
             newMovie = await _mediaService.AddMovie(newMovie);
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
 
             return Ok(newMovie);
         }
@@ -258,16 +249,21 @@ namespace MyMDb.Controllers
         [Route("add_series")]
         public async Task<IActionResult> AddSeries([FromForm] SeriesDto series, IFormFile? poster)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             var newSeries = _mapper.Map<Series>(series);
 
             // Setting up series directory
-            var seriesImagesDirectory = Path.Combine(_configuration["Paths:Root"]!, _configuration["Paths:Images"]!, newSeries.Title.Replace("?", "").Replace(":", ""));
+            var seriesImagesDirectory = Path.Combine(_configuration["Paths:Root"]!, _configuration["Paths:Images"]!, _mediaService.SanitizeFileName(newSeries.Title));
             if (!Directory.Exists(seriesImagesDirectory))
             {
                 Directory.CreateDirectory(seriesImagesDirectory);
             }
 
-            var seriesVideosDirectory = Path.Combine(_configuration["Paths:Root"]!, _configuration["Paths:Videos"]!, newSeries.Title.Replace("?", "").Replace(":", ""));
+            var seriesVideosDirectory = Path.Combine(_configuration["Paths:Root"]!, _configuration["Paths:Videos"]!, _mediaService.SanitizeFileName(newSeries.Title));
             if (!Directory.Exists(seriesVideosDirectory))
             {
                 Directory.CreateDirectory(seriesVideosDirectory);
@@ -284,20 +280,12 @@ namespace MyMDb.Controllers
                     return BadRequest("No path provided for poster");
                 }
 
-                newSeries.PosterPath = Path.Combine(_configuration["Paths:Images"]!, newSeries.Title, newSeries.PosterPath).Replace("?", "").Replace(":", "");
+                newSeries.PosterPath = Path.Combine(_configuration["Paths:Images"]!, newSeries.Title, _mediaService.SanitizeFileName(newSeries.PosterPath));
 
-                using (var stream = new FileStream(_configuration["Paths:Root"] + newSeries.PosterPath, FileMode.Create))
-                {
-                    await poster.CopyToAsync(stream);
-                }
+                await _fileProcessingService.ProcessFileAsync(poster, _configuration["Paths:Root"] + newSeries.PosterPath);
             }
 
             newSeries = await _mediaService.AddSeries(newSeries);
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
 
             return Ok(newSeries);
         }
@@ -307,6 +295,11 @@ namespace MyMDb.Controllers
         [Route("add_episode")]
         public async Task<IActionResult> AddEpisode([FromForm] EpisodeDto episode, IFormFile? poster, IFormFile? video)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             var newEpisode = _mapper.Map<Episode>(episode);
 
             var series = await _mediaService.GetSeriesById(newEpisode.SeriesId);
@@ -327,12 +320,9 @@ namespace MyMDb.Controllers
                     return BadRequest("No path provided for poster");
                 }
 
-                newEpisode.PosterPath = Path.Combine(_configuration["Paths:Images"]!, series.Title, newEpisode.PosterPath).Replace("?", "").Replace(":", "");
+                newEpisode.PosterPath = _mediaService.SanitizeFileName(Path.Combine(_configuration["Paths:Images"]!, series.Title, newEpisode.PosterPath));
 
-                using (var stream = new FileStream(_configuration["Paths:Root"] + newEpisode.PosterPath, FileMode.Create))
-                {
-                    await poster.CopyToAsync(stream);
-                }
+                await _fileProcessingService.ProcessFileAsync(poster, _configuration["Paths:Root"] + newEpisode.PosterPath);
             }
 
             if (video != null)
@@ -346,22 +336,12 @@ namespace MyMDb.Controllers
                     return BadRequest("No path provided for video");
                 }
 
-                newEpisode.VideoPath = Path.Combine(_configuration["Paths:Videos"]!, series.Title, newEpisode.VideoPath).Replace("?", "").Replace(":", "");
+                newEpisode.VideoPath = _mediaService.SanitizeFileName(Path.Combine(_configuration["Paths:Videos"]!, series.Title, newEpisode.VideoPath));
 
-                using (var stream = new FileStream(_configuration["Paths:Root"] + newEpisode.VideoPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite, bufferSize, FileOptions.WriteThrough | FileOptions.Asynchronous))
-                {
-                    await video.CopyToAsync(stream);
-                }
-
-                await _mediaService.NormalizeVideo(_configuration["Paths:Root"]! + newEpisode.VideoPath);                
+                await _fileProcessingService.ProcessVideoFileAsync(video, _configuration["Paths:Root"] + newEpisode.VideoPath, _mediaService, bufferSize);
             }
 
             newEpisode = await _mediaService.AddEpisode(newEpisode);
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
 
             return Ok(newEpisode);
         }
@@ -371,6 +351,11 @@ namespace MyMDb.Controllers
         [Route("add_many_episodes")]
         public async Task<IActionResult> AddManyEpisodes(Guid seriesId, int seasonNumber, int episodesNumber)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             var series = await _mediaService.GetSeriesById(seriesId);
 
             if (series == null)
@@ -379,11 +364,6 @@ namespace MyMDb.Controllers
             }
 
             var newEpisodes = await _mediaService.AddManyEpisodesToASeries(seriesId, seasonNumber, episodesNumber, series.PosterPath);
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
 
             return Ok(newEpisodes);
         }
@@ -395,6 +375,11 @@ namespace MyMDb.Controllers
         [Route("edit_movie/{id}")]
         public async Task<IActionResult> EditMovie(Guid id, [FromForm] MovieDto movieToEdit, IFormFile? poster, IFormFile? video)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             if (id != movieToEdit.Id)
             {
                 return BadRequest();
@@ -419,10 +404,7 @@ namespace MyMDb.Controllers
 
                 movieToEdit.PosterPath = _configuration["Paths:Images"] + movieToEdit.PosterPath;
 
-                using (var stream = new FileStream(_configuration["Paths:Root"] + movieToEdit.PosterPath, FileMode.Create))
-                {
-                    await poster.CopyToAsync(stream);
-                }
+                await _fileProcessingService.ProcessFileAsync(poster, _configuration["Paths:Root"] + movieToEdit.PosterPath);
             }
 
             if (video != null)
@@ -438,20 +420,12 @@ namespace MyMDb.Controllers
 
                 movieToEdit.VideoPath = _configuration["Paths:Videos"] + movieToEdit.VideoPath;
 
-                using (var stream = new FileStream(_configuration["Paths:Root"] + movieToEdit.VideoPath, FileMode.Create))
-                {
-                    await video.CopyToAsync(stream);
-                }
+                await _fileProcessingService.ProcessVideoFileAsync(video, _configuration["Paths:Root"] + movieToEdit.VideoPath, _mediaService, bufferSize);
             }
 
             _mapper.Map(movieToEdit, currentMovie);
 
             await _mediaService.EditMovie(id, currentMovie);
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
 
             return Ok(currentMovie);
         }
@@ -461,6 +435,11 @@ namespace MyMDb.Controllers
         [Route("edit_series/{id}")]
         public async Task<IActionResult> EditSeries(Guid id, [FromBody] SeriesDto seriesToEdit, IFormFile? poster)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             if (id != seriesToEdit.Id)
             {
                 return BadRequest();
@@ -478,21 +457,15 @@ namespace MyMDb.Controllers
                 {
                     return BadRequest("No path provided for poster");
                 }
-                using (var stream = new FileStream(seriesToEdit.PosterPath, FileMode.Create))
-                {
-                    await poster.CopyToAsync(stream);
-                }
+
+                await _fileProcessingService.ProcessFileAsync(poster, seriesToEdit.PosterPath);
+
                 currentSeries.PosterPath = seriesToEdit.PosterPath;
             }
 
             _mapper.Map(seriesToEdit, currentSeries);
 
             await _mediaService.EditSeries(id, currentSeries);
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
 
             return Ok(currentSeries);
         }
@@ -502,6 +475,11 @@ namespace MyMDb.Controllers
         [Route("edit_episode/{id}")]
         public async Task<IActionResult> EditEpisode(Guid id, [FromBody] EpisodeDto episodeToEdit, IFormFile? poster, IFormFile? video)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             if (id != episodeToEdit.Id)
             {
                 return BadRequest();
@@ -519,10 +497,7 @@ namespace MyMDb.Controllers
                 {
                     return BadRequest("No path provided for poster");
                 }
-                using (var stream = new FileStream(episodeToEdit.PosterPath, FileMode.Create))
-                {
-                    await poster.CopyToAsync(stream);
-                }
+                await _fileProcessingService.ProcessFileAsync(poster, episodeToEdit.PosterPath);
                 currentEpisode.PosterPath = episodeToEdit.PosterPath;
             }
 
@@ -532,21 +507,13 @@ namespace MyMDb.Controllers
                 {
                     return BadRequest("No path provided for video");
                 }
-                using (var stream = new FileStream(episodeToEdit.VideoPath, FileMode.Create))
-                {
-                    await video.CopyToAsync(stream);
-                }
+                await _fileProcessingService.ProcessVideoFileAsync(video, episodeToEdit.VideoPath, _mediaService, bufferSize);
                 currentEpisode.VideoPath = episodeToEdit.VideoPath;
             }
 
             _mapper.Map(episodeToEdit, currentEpisode);
 
             await _mediaService.EditEpisode(id, currentEpisode);
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
 
             return Ok(currentEpisode);
         }
