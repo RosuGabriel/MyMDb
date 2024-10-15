@@ -8,7 +8,10 @@ This web app is designed for administrators to add movies or series that are not
 
 The site has a very intuitive user interface. It features a logo that directs to the main page and a login button in the navigation bar. Immediately below that is the library section, which has a centered triple button for filtering media types and the results listed responsively based on screen dimensions.
 
-![MyMDb Main Page](images/mainPage.png?raw=true)
+<p float="left">
+    <img alt="Desktop Site" src="images/desktopSite.jpg" width="77%"/>
+    <img alt="Mobile Site" src="images/mobileSite.jpg" width="22%"/>
+</p>
 
 # Backend
 

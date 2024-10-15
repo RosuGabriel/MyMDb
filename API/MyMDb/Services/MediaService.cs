@@ -266,13 +266,6 @@ namespace MyMDb.Services
         {
             fileName = fileName.Replace("&","and").Replace(":","").Replace("?", "");
 
-            var invalidChars = Path.GetInvalidFileNameChars();
-
-            foreach (var invalidChar in invalidChars)
-            {
-                fileName = fileName.Replace(invalidChar.ToString(), "");
-            }
-
             return fileName;
         }
     }

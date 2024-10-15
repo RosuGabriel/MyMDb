@@ -1,4 +1,5 @@
 import { Attribute, axiosInstance } from "../Data";
+import { generateUniqueFileName } from "./MediaService";
 
 const API_URL = "media/";
 
@@ -11,7 +12,8 @@ export const addAttribute = async (
   formData.append("type", newAttribute.type || "");
   formData.append("language", newAttribute.language || "");
   if (file) {
-    formData.append("file", file);
+    const fileName = await generateUniqueFileName(file.name, file);
+    formData.append("file", file, fileName);
   }
 
   formData.forEach((value, key) => {

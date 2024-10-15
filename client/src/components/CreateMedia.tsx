@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   createMovie,
   createSeries,
@@ -39,14 +39,21 @@ export const CreateMedia: React.FC = () => {
       setUploadProgress(progress);
       if (progressEvent.loaded === progressEvent.total) {
         console.log("Upload complete!");
-        navigate("/media");
+        setIsCreating(false);
+        setUploadProgress(100);
       }
     };
 
     try {
       if (mediaType === "Movie") {
-        createMovie(newMedia, image, video, handleUploadProgress);
         console.log("Uploading movie...");
+        const createdMovie = await createMovie(
+          newMedia,
+          image,
+          video,
+          handleUploadProgress
+        );
+        console.log("Movie created successfully:", createdMovie);
       } else {
         const createdSeries = await createSeries(
           newMedia,
@@ -55,16 +62,17 @@ export const CreateMedia: React.FC = () => {
         );
         console.log("Series created successfully:", createdSeries);
       }
-      if (uploadProgress === 100) {
-        navigate("/media");
-      }
     } catch (error) {
       console.error("Error creating media:", error);
-    } finally {
-      setIsCreating(false);
-      setUploadProgress(0);
     }
   };
+
+  useEffect(() => {
+    if (uploadProgress === 100) {
+      setUploadProgress(0);
+      navigate("/media");
+    }
+  }, [uploadProgress]);
 
   return (
     <form className="create-form" onSubmit={handleSubmit}>
@@ -175,7 +183,6 @@ export const CreateMedia: React.FC = () => {
 };
 
 const CreateEpisode: React.FC<{ seriesId: string }> = ({ seriesId: id }) => {
-  const [seriesId] = useState(id);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [releaseDate, setReleaseDate] = useState("");
@@ -192,7 +199,7 @@ const CreateEpisode: React.FC<{ seriesId: string }> = ({ seriesId: id }) => {
     setIsCreating(true);
 
     const newEpisode: Partial<Media> = {
-      id: seriesId,
+      id,
       title,
       description,
       releaseDate: releaseDate ? new Date(releaseDate) : undefined,
@@ -207,23 +214,31 @@ const CreateEpisode: React.FC<{ seriesId: string }> = ({ seriesId: id }) => {
       setUploadProgress(progress);
       if (progressEvent.loaded === progressEvent.total) {
         console.log("Upload complete!");
-        navigate("/media" + seriesId);
+        setIsCreating(false);
+        setUploadProgress(100);
       }
     };
 
     try {
-      createEpisode(newEpisode, image, video, handleUploadProgress);
       console.log("Uploading episode...");
-      if (uploadProgress === 100) {
-        navigate("/media" + seriesId);
-      }
+      const createdEpisode = await createEpisode(
+        newEpisode,
+        image,
+        video,
+        handleUploadProgress
+      );
+      console.log("Episode created successfully:", createdEpisode);
     } catch (error) {
       console.error("Error creating media:", error);
-    } finally {
-      setIsCreating(false);
-      setUploadProgress(0);
     }
   };
+
+  useEffect(() => {
+    if (uploadProgress === 100) {
+      setUploadProgress(0);
+      navigate("/media/" + id);
+    }
+  }, [uploadProgress]);
 
   return (
     <form className="create-form" onSubmit={handleSubmit}>
@@ -318,7 +333,7 @@ const CreateEpisode: React.FC<{ seriesId: string }> = ({ seriesId: id }) => {
       {uploadProgress > 0 && (
         <div className="mt-3">
           <p>Upload progress: {uploadProgress}%</p>
-          <progress value={uploadProgress} max="100" />
+          <progress className="bg-warning" value={uploadProgress} max="100" />
         </div>
       )}
     </form>

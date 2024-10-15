@@ -185,13 +185,16 @@ export const deleteMedia = async (id: string): Promise<void> => {
   }
 };
 
-const generateUniqueFileName = async (
+export const generateUniqueFileName = async (
   title: string,
   file: File
 ): Promise<string> => {
   let extension = getFileExtension(file.name);
   if (extension == "mkv") {
     extension = "mp4";
+  }
+  if (extension == "srt") {
+    extension = "vtt";
   }
   const uniqueFileName = `${title}.${extension}`;
   return uniqueFileName;

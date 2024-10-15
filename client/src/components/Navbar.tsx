@@ -26,9 +26,11 @@ function Navbar() {
       setNavbarWidth(document.querySelector("#navbarNav")?.clientWidth || 0);
     };
 
-    setNavbarWidth(document.querySelector("#navbarNav")?.clientWidth || 0);
+    handleResize();
+    checkAuth();
 
     setSearch(new URLSearchParams(location.search).get("search") || "");
+
     window.addEventListener("storage", checkAuth);
     window.addEventListener("authChange", checkAuth);
     window.addEventListener("resize", handleResize);
