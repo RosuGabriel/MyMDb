@@ -18,3 +18,7 @@ body,
 .searchbar {
   max-width: 300px;
 }
+
+.media-card-img {
+  aspect-ratio: 2/3;
+}

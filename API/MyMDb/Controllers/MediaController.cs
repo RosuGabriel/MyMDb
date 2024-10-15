@@ -171,14 +171,14 @@ namespace MyMDb.Controllers
                 return BadRequest("File does not have an extension");
             }
             // Saved as vtt but still needs conversion, this is for not editing the path again after the conversion
-            if (extension == "srt")
+            if (extension == ".srt")
             {
-                extension = "vtt";
+                extension = ".vtt";
             }
 
             if (media.VideoPath != null)
             {
-                attributeDto.AttributePath = Path.ChangeExtension(media.VideoPath, null) + "_" + attributeDto.Type + "_" + attributeDto.Language + "." + extension;
+                attributeDto.AttributePath = Path.ChangeExtension(media.VideoPath, null) + "_" + attributeDto.Type + "_" + attributeDto.Language + extension;
             }
             else
             {
@@ -280,7 +280,7 @@ namespace MyMDb.Controllers
                     return BadRequest("No path provided for poster");
                 }
 
-                newSeries.PosterPath = Path.Combine(_configuration["Paths:Images"]!, newSeries.Title, _mediaService.SanitizeFileName(newSeries.PosterPath));
+                newSeries.PosterPath = _mediaService.SanitizeFileName(Path.Combine(_configuration["Paths:Images"]!, newSeries.Title, newSeries.PosterPath));
 
                 await _fileProcessingService.ProcessFileAsync(poster, _configuration["Paths:Root"] + newSeries.PosterPath);
             }
