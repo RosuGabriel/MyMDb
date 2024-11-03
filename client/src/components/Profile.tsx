@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { API_URL, UserProfile } from "../Data";
-import {
-  fetchProfile,
-  updateProfile,
-  getExtension,
-} from "../services/UserService";
+import { getFileExtension } from "../services/MediaService";
+import { fetchProfile, updateProfile } from "../services/UserService";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const Profile: React.FC = () => {
@@ -12,6 +9,7 @@ const Profile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [newUsername, setNewUsername] = useState("");
   const [newProfilePic, setNewProfilePic] = useState<File | null>(null);
+  document.title = "MyMDb - Profile";
 
   useEffect(() => {
     const getProfile = async () => {
@@ -45,7 +43,7 @@ const Profile: React.FC = () => {
         formData.append("ProfilePic", newProfilePic);
         formData.append(
           "ProfilePicPath",
-          profile.userId + getExtension(newProfilePic?.name || "")
+          profile.userId + "." + getFileExtension(newProfilePic?.name || "")
         );
       }
 

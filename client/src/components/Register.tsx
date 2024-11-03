@@ -10,6 +10,7 @@ const RegisterForm: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const navigate = useNavigate();
+  document.title = "MyMDb - Register";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

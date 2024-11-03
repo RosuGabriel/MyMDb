@@ -35,7 +35,7 @@ const ShowMedia: React.FC<{ mediaId: string; season: number }> = ({
     const fetchMedia = async () => {
       try {
         const fetchedMedia = await fetchMediaById(mediaId);
-
+        document.title = fetchedMedia!.title;
         if (fetchedMedia.posterPath) {
           fetchedMedia.posterPath = API_URL + fetchedMedia.posterPath;
         } else if (fetchedMedia.mediaType === "Episode") {
@@ -134,7 +134,7 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
   const [episodes, setEpisodes] = useState<Media[]>([]);
   const [prevEpisodeId, setPrevEpisodeId] = useState<string | null>(null);
   const [nextEpisodeId, setNextEpisodeId] = useState<string | null>(null);
-
+  const mediaKeys = ["ArrowRight", "ArrowLeft", " ", "f", "m"];
   const videoRef = useRef<HTMLVideoElement | null>(null); // referința pentru video
 
   useEffect(() => {
@@ -142,6 +142,14 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
       try {
         const fetchedEpisodes = (await fetchMediaById(media.series?.id))
           .episodes.$values;
+        document.title =
+          title !== "N/A"
+            ? title
+            : media.series?.title +
+              " - S" +
+              media.seasonNumber +
+              " - E" +
+              media.episodeNumber;
         setEpisodes(fetchedEpisodes);
       } catch (error) {
         console.error("Error fetching other episodes:", error);
@@ -178,7 +186,7 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
         return;
       }
 
-      if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+      if (mediaKeys.includes(event.key)) {
         event.preventDefault();
       }
 
@@ -188,6 +196,23 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
           break;
         case "ArrowLeft":
           video.currentTime -= 5;
+          break;
+        case " ":
+          if (video.paused) {
+            video.play();
+          } else {
+            video.pause();
+          }
+          break;
+        case "f":
+          if (!document.fullscreenElement) {
+            video.requestFullscreen();
+          } else {
+            document.exitFullscreen();
+          }
+          break;
+        case "m":
+          video.muted = !video.muted;
           break;
         default:
           break;
@@ -233,9 +258,6 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
         </div>
       )}
       <div className="row">
-        <div className="col-md-4">
-          <img src={posterPath} alt={title} className="img-fluid rounded" />
-        </div>
         <div className="col-md-8">
           <br />
           <h2>{title === "N/A" ? "" : title}</h2>
@@ -276,6 +298,9 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
           )}
           <p>{description}</p>
         </div>
+        <div className="col-md-4">
+          <img src={posterPath} alt={title} className="img-fluid rounded" />
+        </div>
       </div>
     </div>
   );
@@ -295,9 +320,6 @@ const ShowSeries: React.FC<Media & { selectedSeason: number }> = (series) => {
   return (
     <div className="container mt-4">
       <div className="row">
-        <div className="col-md-4">
-          <img src={posterPath} alt={title} className="img-fluid rounded" />
-        </div>
         <div className="col-md-8">
           <br />
           <h2>{title}</h2>
@@ -348,6 +370,9 @@ const ShowSeries: React.FC<Media & { selectedSeason: number }> = (series) => {
               </h5>
             )}
           </div>
+        </div>
+        <div className="col-md-4">
+          <img src={posterPath} alt={title} className="img-fluid rounded" />
         </div>
       </div>
     </div>
