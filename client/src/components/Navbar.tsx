@@ -10,10 +10,14 @@ function Navbar() {
   const navigate = useNavigate();
   const [searchQuery, setSearch] = useState("");
   const [isCollapsed, setIsCollapsed] = useState(true);
-  const [navbarWidth, setNavbarWidth] = useState(900);
+  const [isLargeScreen, setIsLargeScreen] = useState(window.innerWidth >= 992);
 
   const handleToggle = () => {
     setIsCollapsed(!isCollapsed);
+  };
+
+  const handleResize = () => {
+    setIsLargeScreen(window.innerWidth >= 992);
   };
 
   useEffect(() => {
@@ -22,11 +26,6 @@ function Navbar() {
       setIsAdminUser(isAdmin());
     };
 
-    const handleResize = () => {
-      setNavbarWidth(document.querySelector("#navbarNav")?.clientWidth || 0);
-    };
-
-    handleResize();
     checkAuth();
 
     setSearch(new URLSearchParams(location.search).get("search") || "");
@@ -56,9 +55,13 @@ function Navbar() {
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top p-3">
       <div className="container-fluid d-flex align-items-center">
         <a
+          id="app-logo"
           className="navbar-brand bg-warning px-2 rounded text-dark"
           href="/"
-          style={{ fontWeight: "900" }}
+          style={{
+            fontWeight: "900",
+            marginRight: isLogged && isLargeScreen ? "154.77px" : "0px",
+          }}
         >
           MyMDb
         </a>
@@ -91,12 +94,9 @@ function Navbar() {
           >
             <form
               {...{
-                className: `searchbar d-flex input-group ${
+                className: `searchbar d-flex input-group mx-auto ${
                   !isCollapsed && "mb-2"
                 }`,
-                style: isCollapsed
-                  ? { marginLeft: (navbarWidth - 411) / 2 + "px" }
-                  : { margin: "auto" },
               }}
               onSubmit={handleSearch}
             >
@@ -115,21 +115,27 @@ function Navbar() {
 
             <div className="btn-group">
               {isAdminUser && (
-                <a className="btn btn-secondary" href="/create">
+                <a className="btn btn-dark" href="/create">
                   Add Media
                 </a>
               )}
               {isLogged ? (
                 <>
-                  <a className="btn btn-secondary" href="/profile">
+                  <a className="btn btn-dark" href="/profile">
                     Profile
                   </a>
-                  <button className="btn btn-secondary" onClick={logout}>
+                  <button className="btn btn-dark" onClick={logout}>
                     Logout
                   </button>
                 </>
               ) : (
-                <a className="btn btn-dark" href="/login">
+                <a
+                  className="btn btn-dark"
+                  href="/login"
+                  style={
+                    !isLogged && isCollapsed ? { marginLeft: "30.12px" } : {}
+                  }
+                >
                   Login
                 </a>
               )}

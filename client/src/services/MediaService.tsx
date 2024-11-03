@@ -200,7 +200,7 @@ export const generateUniqueFileName = async (
   return uniqueFileName;
 };
 
-const getFileExtension = (fileName: string): string => {
+export const getFileExtension = (fileName: string): string => {
   let extension = fileName.split(".").pop() || "";
   return extension;
 };

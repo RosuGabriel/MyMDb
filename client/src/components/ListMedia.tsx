@@ -17,17 +17,13 @@ const ListMedia: React.FC = () => {
   const [mediaType, setMediaType] = useState<"movies" | "series" | "all">(
     initialMediaType
   );
-
   const [allMedia, setAllMedia] = useState<Media[]>([]);
-
   const [media, setMedia] = useState<Media[]>([]);
 
   // Fetch media list
   useEffect(() => {
     const fetchMediaList = async () => {
-      let fetchedMedia: Media[] = [];
-
-      fetchedMedia = await fetchMedia();
+      let fetchedMedia: Media[] = await fetchMedia();
       const searchQuery = queryParams.get("search");
 
       fetchedMedia.sort((a, b) => {
@@ -36,14 +32,10 @@ const ListMedia: React.FC = () => {
         );
       });
 
-      let updatedMedia = await Promise.all(
-        fetchedMedia.map(async (m) => {
-          return {
-            ...m,
-            posterPath: m.posterPath ? API_URL + m.posterPath : defaultImage,
-          };
-        })
-      );
+      let updatedMedia = fetchedMedia.map((m) => ({
+        ...m,
+        posterPath: m.posterPath ? API_URL + m.posterPath : defaultImage,
+      }));
 
       setAllMedia(updatedMedia);
 
@@ -71,15 +63,18 @@ const ListMedia: React.FC = () => {
   useEffect(() => {
     let filteredMedia = allMedia;
     const searchQuery = queryParams.get("search");
-
-    // Filter by media type
+    if (mediaType === "movies" || mediaType === "series") {
+      document.title =
+        "MyMDb - " + mediaType.charAt(0).toUpperCase() + mediaType.slice(1);
+    } else {
+      document.title = "MyMDb";
+    }
     if (mediaType === "movies") {
       filteredMedia = filteredMedia.filter((m) => m.mediaType === "Movie");
     } else if (mediaType === "series") {
       filteredMedia = filteredMedia.filter((m) => m.mediaType === "Series");
     }
 
-    // Filter by search query
     if (searchQuery && searchQuery.trim()) {
       filteredMedia = filteredMedia.filter((m) =>
         m.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -93,13 +88,6 @@ const ListMedia: React.FC = () => {
     setMediaType(type);
     queryParams.set("type", type);
     navigate({ search: queryParams.toString() });
-  };
-
-  const handleImageSrcError = (
-    e: React.SyntheticEvent<HTMLImageElement, Event>
-  ) => {
-    const img = e.currentTarget as HTMLImageElement;
-    img.src = defaultImage;
   };
 
   return (
@@ -131,27 +119,47 @@ const ListMedia: React.FC = () => {
       <div className="container-fluid">
         <div className="row d-flex">
           {media.map((m) => (
-            <a
-              className="col-6 col-sm-4 col-md-4 col-lg-3 col-xl-2 mb-4 text-decoration-none"
-              key={m.id}
-              href={"/media/" + m.id}
-            >
-              <div className="card media-card btn btn-dark text-secondary h-100 d-flex flex-column p-1">
-                <img
-                  src={m.posterPath}
-                  onError={handleImageSrcError}
-                  alt={m.title}
-                  className="card-img-top media-card-img rounded"
-                />
-                <div className="card-body d-flex justify-content-center align-items-center flex-grow-1">
-                  <h5 className="card-title m-0 text-center">{m.title}</h5>
-                </div>
-              </div>
-            </a>
+            <MediaItem key={m.id} media={m} defaultImage={defaultImage} />
           ))}
         </div>
       </div>
     </div>
+  );
+};
+
+const MediaItem: React.FC<{ media: Media; defaultImage: string }> = ({
+  media,
+  defaultImage,
+}) => {
+  const [imageSrc, setImageSrc] = useState<string>(defaultImage);
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = media.posterPath;
+    img.onload = () => setImageSrc(media.posterPath);
+  }, [media.posterPath]);
+
+  const handleImageSrcError = () => {
+    setImageSrc(defaultImage);
+  };
+
+  return (
+    <a
+      className="col-6 col-sm-4 col-md-4 col-lg-3 col-xl-2 mb-4 text-decoration-none"
+      href={"/media/" + media.id}
+    >
+      <div className="card media-card btn btn-dark text-secondary h-100 d-flex flex-column p-1">
+        <img
+          src={imageSrc}
+          onError={handleImageSrcError}
+          alt={media.title}
+          className="card-img-top media-card-img rounded"
+        />
+        <div className="card-body d-flex justify-content-center align-items-center flex-grow-1">
+          <h5 className="card-title m-0 text-center">{media.title}</h5>
+        </div>
+      </div>
+    </a>
   );
 };
 

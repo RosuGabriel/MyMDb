@@ -39,7 +39,6 @@ export const CreateMedia: React.FC = () => {
       setUploadProgress(progress);
       if (progressEvent.loaded === progressEvent.total) {
         console.log("Upload complete!");
-        setIsCreating(false);
         setUploadProgress(100);
       }
     };
@@ -168,16 +167,29 @@ export const CreateMedia: React.FC = () => {
         </div>
       )}
 
-      <button className="btn btn-success" type="submit" disabled={isCreating}>
-        {isCreating ? "Creating..." : `Create ${mediaType}`}
-      </button>
-
-      {uploadProgress > 0 && (
-        <div className="mt-3">
-          <p>Upload progress: {uploadProgress}%</p>
-          <progress value={uploadProgress} max="100" />
-        </div>
-      )}
+      <div className="d-flex flex-row justify-content-center align-items-center mt-4">
+        {isCreating ? (
+          <>
+            <p className="m-0 me-3">Upload progress: </p>
+            <div className="progress" style={{ width: "50%", height: "100%" }}>
+              <div
+                className="progress-bar progress-bar-striped progress-bar-animated bg-warning text-dark"
+                role="progressbar"
+                aria-valuenow={uploadProgress}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                style={{ width: `${uploadProgress}%` }}
+              >
+                {uploadProgress}%
+              </div>
+            </div>
+          </>
+        ) : (
+          <button className="btn btn-success" type="submit">
+            Create {mediaType}
+          </button>
+        )}
+      </div>
     </form>
   );
 };
@@ -214,7 +226,6 @@ const CreateEpisode: React.FC<{ seriesId: string }> = ({ seriesId: id }) => {
       setUploadProgress(progress);
       if (progressEvent.loaded === progressEvent.total) {
         console.log("Upload complete!");
-        setIsCreating(false);
         setUploadProgress(100);
       }
     };
@@ -326,16 +337,29 @@ const CreateEpisode: React.FC<{ seriesId: string }> = ({ seriesId: id }) => {
         />
       </div>
 
-      <button className="btn btn-success" type="submit" disabled={isCreating}>
-        {isCreating ? "Creating..." : "Create Episode"}
-      </button>
-
-      {uploadProgress > 0 && (
-        <div className="mt-3">
-          <p>Upload progress: {uploadProgress}%</p>
-          <progress className="bg-warning" value={uploadProgress} max="100" />
-        </div>
-      )}
+      <div className="d-flex flex-row justify-content-center align-items-center mt-4">
+        {isCreating ? (
+          <>
+            <p className="m-0 me-3">Upload progress: </p>
+            <div className="progress" style={{ width: "50%", height: "100%" }}>
+              <div
+                className="progress-bar progress-bar-striped progress-bar-animated bg-warning text-dark"
+                role="progressbar"
+                aria-valuenow={uploadProgress}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                style={{ width: `${uploadProgress}%` }}
+              >
+                {uploadProgress}%
+              </div>
+            </div>
+          </>
+        ) : (
+          <button className="btn btn-success" type="submit">
+            Create Episode
+          </button>
+        )}
+      </div>
     </form>
   );
 };
