@@ -12,7 +12,7 @@ using MyMDb.Data;
 namespace MyMDb.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240912073239_Initial")]
+    [Migration("20241104152605_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -54,13 +54,13 @@ namespace MyMDb.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "33c1d47b-c3ba-4b79-91b4-b61a7d38b30a",
+                            Id = "328076aa-507c-447f-a50f-2fafb48c8a91",
                             Name = "admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "d5cd2a29-2f30-4dec-a820-f90d5270b0f8",
+                            Id = "5e0229c5-35bd-4350-af2f-cab30e03330c",
                             Name = "user",
                             NormalizedName = "USER"
                         });
@@ -155,13 +155,13 @@ namespace MyMDb.Migrations
                     b.HasData(
                         new
                         {
-                            UserId = "9165f7a3-0768-4c70-aa94-69af060cfcb8",
-                            RoleId = "33c1d47b-c3ba-4b79-91b4-b61a7d38b30a"
+                            UserId = "8be27fdb-2214-414b-adc0-fd81beb265cb",
+                            RoleId = "328076aa-507c-447f-a50f-2fafb48c8a91"
                         },
                         new
                         {
-                            UserId = "9165f7a3-0768-4c70-aa94-69af060cfcb8",
-                            RoleId = "d5cd2a29-2f30-4dec-a820-f90d5270b0f8"
+                            UserId = "8be27fdb-2214-414b-adc0-fd81beb265cb",
+                            RoleId = "5e0229c5-35bd-4350-af2f-cab30e03330c"
                         });
                 });
 
@@ -191,6 +191,9 @@ namespace MyMDb.Migrations
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
+
+                    b.Property<bool>("Approved")
+                        .HasColumnType("bit");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -251,17 +254,18 @@ namespace MyMDb.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "9165f7a3-0768-4c70-aa94-69af060cfcb8",
+                            Id = "8be27fdb-2214-414b-adc0-fd81beb265cb",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "8c6ea096-0d91-4bd7-be38-016e98ff8717",
+                            Approved = true,
+                            ConcurrencyStamp = "b7ebfc6f-e0c2-4ef3-a793-016e84b7f7d6",
                             Email = "secret",
                             EmailConfirmed = true,
                             LockoutEnabled = false,
                             NormalizedEmail = "secret",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEN6VtT6Jc5BI2jmyUDdaaWmQFu804zDU9ecBt3YbjCRfG49SGnfq5OryiczE+u/OYQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEP+QsLubJ2jcNzQKX5QVJNN+BaYpKh55PrppZsFuEevFwApS7DubsJqDUnSzySMOlA==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "a9ab9a50-88f3-4d18-a7ef-808d14eb4432",
+                            SecurityStamp = "ad2dcde4-3ae8-49c7-be3e-13d1f36d86b3",
                             TwoFactorEnabled = false,
                             UserName = "admin"
                         });
@@ -404,9 +408,29 @@ namespace MyMDb.Migrations
                     b.HasData(
                         new
                         {
-                            UserId = "9165f7a3-0768-4c70-aa94-69af060cfcb8",
+                            UserId = "8be27fdb-2214-414b-adc0-fd81beb265cb",
                             UserName = "Admin"
                         });
+                });
+
+            modelBuilder.Entity("MyMDb.Models.UserRefreshToken", b =>
+                {
+                    b.Property<Guid?>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("Expiration")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RefreshToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserRefreshTokens");
                 });
 
             modelBuilder.Entity("MyMDb.Models.Episode", b =>

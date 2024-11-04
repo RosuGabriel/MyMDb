@@ -5,5 +5,6 @@ namespace MyMDb.Models
     public class AppUser : IdentityUser
     {
         public virtual UserProfile? UserProfile { get; set; }
+        public bool Approved { get; set; }
     }
 }

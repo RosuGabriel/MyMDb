@@ -42,6 +42,7 @@ namespace MyMDb.Controllers
         // -------------------- get all
 
         [HttpGet]
+        [Authorize]
         [Route("movies_and_series")]
         public async Task<IActionResult> GetMoviesAndSeries()
         {
@@ -57,6 +58,7 @@ namespace MyMDb.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         [Route("movies")]
         public async Task<IActionResult> GetMovies()
         {
@@ -72,6 +74,7 @@ namespace MyMDb.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         [Route("series")]
         public async Task<IActionResult> GetSeries()
         {
@@ -89,6 +92,7 @@ namespace MyMDb.Controllers
         // -------------------- get by id
 
         [HttpGet]
+        [Authorize]
         [Route("{id}")]
         public async Task<IActionResult> GetMedia(Guid id)
         {
@@ -123,6 +127,7 @@ namespace MyMDb.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         [Route("series/{seriesId}/episodes")]
         public async Task<IActionResult> GetEpisodesOfASeries(Guid seriesId)
         {

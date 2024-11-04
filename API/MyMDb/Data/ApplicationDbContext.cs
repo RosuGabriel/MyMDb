@@ -16,6 +16,7 @@ namespace MyMDb.Data
         public DbSet<Media> Media { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<MediaAttribute> MediaAttributes { get; set; }
+        public DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -41,6 +42,7 @@ namespace MyMDb.Data
             {
                 Id = Guid.NewGuid().ToString(),
                 UserName = "admin",
+                Approved = true,
                 NormalizedUserName = "ADMIN",
                 Email = "secret",
                 NormalizedEmail = "secret",
@@ -70,7 +72,9 @@ namespace MyMDb.Data
 
             builder.Entity<IdentityUserRole<string>>().HasData(adminUserRoles);
 
-
+            // refreshToken
+            builder.Entity<UserRefreshToken>()
+                .HasKey(t => t.Id);
 
             // user - user profile
             builder.Entity<UserProfile>()

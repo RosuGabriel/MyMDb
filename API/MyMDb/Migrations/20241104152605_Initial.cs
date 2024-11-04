@@ -32,6 +32,7 @@ namespace MyMDb.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Approved = table.Column<bool>(type: "bit", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -79,6 +80,20 @@ namespace MyMDb.Migrations
                         principalTable: "Media",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserRefreshTokens",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RefreshToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Expiration = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserRefreshTokens", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -266,28 +281,28 @@ namespace MyMDb.Migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { "33c1d47b-c3ba-4b79-91b4-b61a7d38b30a", null, "admin", "ADMIN" },
-                    { "d5cd2a29-2f30-4dec-a820-f90d5270b0f8", null, "user", "USER" }
+                    { "328076aa-507c-447f-a50f-2fafb48c8a91", null, "admin", "ADMIN" },
+                    { "5e0229c5-35bd-4350-af2f-cab30e03330c", null, "user", "USER" }
                 });
 
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
-                columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
-                values: new object[] { "9165f7a3-0768-4c70-aa94-69af060cfcb8", 0, "8c6ea096-0d91-4bd7-be38-016e98ff8717", "secret", true, false, null, "secret", "ADMIN", "AQAAAAIAAYagAAAAEN6VtT6Jc5BI2jmyUDdaaWmQFu804zDU9ecBt3YbjCRfG49SGnfq5OryiczE+u/OYQ==", null, false, "a9ab9a50-88f3-4d18-a7ef-808d14eb4432", false, "admin" });
+                columns: new[] { "Id", "AccessFailedCount", "Approved", "ConcurrencyStamp", "Email", "EmailConfirmed", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
+                values: new object[] { "8be27fdb-2214-414b-adc0-fd81beb265cb", 0, true, "b7ebfc6f-e0c2-4ef3-a793-016e84b7f7d6", "secret", true, false, null, "secret", "ADMIN", "AQAAAAIAAYagAAAAEP+QsLubJ2jcNzQKX5QVJNN+BaYpKh55PrppZsFuEevFwApS7DubsJqDUnSzySMOlA==", null, false, "ad2dcde4-3ae8-49c7-be3e-13d1f36d86b3", false, "admin" });
 
             migrationBuilder.InsertData(
                 table: "AspNetUserRoles",
                 columns: new[] { "RoleId", "UserId" },
                 values: new object[,]
                 {
-                    { "33c1d47b-c3ba-4b79-91b4-b61a7d38b30a", "9165f7a3-0768-4c70-aa94-69af060cfcb8" },
-                    { "d5cd2a29-2f30-4dec-a820-f90d5270b0f8", "9165f7a3-0768-4c70-aa94-69af060cfcb8" }
+                    { "328076aa-507c-447f-a50f-2fafb48c8a91", "8be27fdb-2214-414b-adc0-fd81beb265cb" },
+                    { "5e0229c5-35bd-4350-af2f-cab30e03330c", "8be27fdb-2214-414b-adc0-fd81beb265cb" }
                 });
 
             migrationBuilder.InsertData(
                 table: "UserProfiles",
                 columns: new[] { "UserId", "DateCreated", "DateModified", "ProfilePicPath", "UserName" },
-                values: new object[] { "9165f7a3-0768-4c70-aa94-69af060cfcb8", null, null, null, "Admin" });
+                values: new object[] { "8be27fdb-2214-414b-adc0-fd81beb265cb", null, null, null, "Admin" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -372,6 +387,9 @@ namespace MyMDb.Migrations
 
             migrationBuilder.DropTable(
                 name: "Reviews");
+
+            migrationBuilder.DropTable(
+                name: "UserRefreshTokens");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

@@ -2,14 +2,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 using MyMDb.Data;
 using MyMDb.DTOs;
 using MyMDb.Models;
 using MyMDb.ServiceInterfaces;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
 
 namespace MyMDb.Controllers
 {
@@ -19,6 +16,7 @@ namespace MyMDb.Controllers
     {
         private readonly IUserService _userService;
         private readonly IReviewService _reviewService;
+        private readonly ITokenService _tokenService;
         private readonly UserManager<AppUser> _userManager;
         private readonly SignInManager<AppUser> _signInManager;
         private readonly IMapper _mapper;
@@ -26,10 +24,11 @@ namespace MyMDb.Controllers
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<AccountController> _logger;
 
-        public AccountController(IUserService userService, IReviewService reviewService, UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IConfiguration configuration, IMapper mapper, IHttpContextAccessor httpContextAccessor, ILogger<AccountController> logger)
+        public AccountController(IUserService userService, IReviewService reviewService, ITokenService tokenService, UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IConfiguration configuration, IMapper mapper, IHttpContextAccessor httpContextAccessor, ILogger<AccountController> logger)
         {
             _userService = userService;
             _reviewService = reviewService;
+            _tokenService = tokenService;
             _userManager = userManager;
             _signInManager = signInManager;
             _configuration = configuration;
@@ -98,7 +97,96 @@ namespace MyMDb.Controllers
             return Ok(new { Result = "User created successfully" });
         }
 
+        [HttpPost]
+        [Route("login")]
+        public async Task<IActionResult> Login([FromBody] UserDto userDto)
+        {
+            _logger.LogInformation("Login attempt for user: {Email}", userDto.Email);
+
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Invalid model state for user: {Email}", userDto.Email);
+                return BadRequest(ModelState);
+            }
+
+            if (userDto.Email == null || userDto.Password == null)
+            {
+                _logger.LogWarning("Email or password not provided for login attempt");
+                return NotFound();
+            }
+
+            var user = await _userManager.FindByEmailAsync(userDto.Email);
+            if (user == null)
+            {
+                _logger.LogWarning("User with email {Email} not found", userDto.Email);
+                return Unauthorized(new { Message = "Email not found" });
+            }
+            if (!user.Approved)
+            {
+                _logger.LogWarning("User with email {Email} not approved", userDto.Email);
+                return Unauthorized(new { Message = "User not approved" });
+            }
+
+            var result = await _signInManager.CheckPasswordSignInAsync(user, userDto.Password, false);
+            if (!result.Succeeded)
+            {
+                _logger.LogWarning("Failed login attempt for user: {Email}", userDto.Email);
+                return Unauthorized(new { Message = "Wrong password" });
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var token = _tokenService.GenerateAccessToken(user, roles);
+
+            var refreshToken = _tokenService.GenerateRefreshToken();
+            await _tokenService.SaveRefreshTokenAsync(user.Id, refreshToken);
+
+            _logger.LogInformation("Login successful for user: {Email}", userDto.Email);
+            return Ok(new { Token = token, RefreshToken = refreshToken });
+        }
+
+        [HttpPost]
+        [Route("refresh")]
+        public async Task<IActionResult> Refresh([FromBody] RefreshDto refreshDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var token = refreshDto.Token;
+            var refreshToken = refreshDto.RefreshToken;
+
+            if (token == null || refreshToken == null)
+            {
+                return BadRequest(new { Message = "Token or refresh token not provided" });
+            }
+
+            var principal = _tokenService.GetPrincipalFromExpiredToken(token);
+            var userId = principal?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null || !await _tokenService.ValidateRefreshTokenAsync(userId, refreshToken))
+            {
+                return Unauthorized(new { Message = "Invalid refresh token" });
+            }
+
+            var user = await _userManager.FindByIdAsync(userId);
+            
+            if (user == null)
+            {
+                return NotFound("User from token not found!");
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            var newAccessToken = _tokenService.GenerateAccessToken(user, roles);
+            var newRefreshToken = _tokenService.GenerateRefreshToken();
+
+            await _tokenService.DeleteRefreshTokenAsync(userId, refreshToken);
+            await _tokenService.SaveRefreshTokenAsync(userId, newRefreshToken);
+
+            return Ok(new { Token = newAccessToken, RefreshToken = newRefreshToken });
+        }
+
         [HttpGet]
+        [Authorize]
         [Route("profile")]
         public async Task<IActionResult> GetProfile()
         {
@@ -187,77 +275,7 @@ namespace MyMDb.Controllers
         }
 
         [HttpPost]
-        [Route("login")]
-        public async Task<IActionResult> Login([FromBody] UserDto userDto)
-        {
-            _logger.LogInformation("Login attempt for user: {Email}", userDto.Email);
-
-            if (!ModelState.IsValid)
-            {
-                _logger.LogWarning("Invalid model state for user: {Email}", userDto.Email);
-                return BadRequest(ModelState);
-            }
-
-            if (userDto.Email == null || userDto.Password == null)
-            {
-                _logger.LogWarning("Email or password not provided for login attempt");
-                return NotFound();
-            }
-
-            var user = await _userManager.FindByEmailAsync(userDto.Email);
-            if (user == null)
-            {
-                _logger.LogWarning("User with email {Email} not found", userDto.Email);
-                return Unauthorized(new { Message = "Email not found" });
-            }
-
-            var result = await _signInManager.CheckPasswordSignInAsync(user, userDto.Password, false);
-            if (!result.Succeeded)
-            {
-                _logger.LogWarning("Failed login attempt for user: {Email}", userDto.Email);
-                return Unauthorized(new { Message = "Wrong password" });
-            }
-
-            var roles = await _userManager.GetRolesAsync(user);
-
-            var keyString = _configuration["Jwt:Key"];
-            if (string.IsNullOrEmpty(keyString))
-            {
-                _logger.LogError("JWT key is not configured.");
-                throw new InvalidOperationException("JWT key is not configured.");
-            }
-
-            var key = Encoding.ASCII.GetBytes(keyString);
-            var tokenHandler = new JwtSecurityTokenHandler();
-
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, userDto.Email)
-            };
-
-            foreach (var role in roles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role));
-            }
-
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddHours(3),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
-                Issuer = _configuration["Jwt:Issuer"],
-                Audience = _configuration["Jwt:Issuer"]
-            };
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            var tokenString = tokenHandler.WriteToken(token);
-
-            _logger.LogInformation("Login successful for user: {Email}", userDto.Email);
-            return Ok(new { Token = tokenString });
-        }
-
-        [HttpPost]
-        [Authorize("user")]
+        [Authorize]
         [Route("add_review")]
         public async Task<IActionResult> AddMovieReview([FromBody] ReviewDto review)
         {
@@ -296,7 +314,7 @@ namespace MyMDb.Controllers
         }
 
         [HttpDelete]
-        [Authorize("user")]
+        [Authorize]
         [Route("delete_review/{mediaId}")]
         public async Task<IActionResult> DeleteMovieReview(Guid mediaId)
         {
