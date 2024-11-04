@@ -1,24 +1,58 @@
 import axios, { AxiosInstance } from "axios";
+import { refreshAccessToken } from "./services/UserService";
 
 export const API_URL = "https://mymdb.tplinkdns.com/";
+
+export let axiosRefreshInstance: AxiosInstance = axios.create({
+  baseURL: API_URL + "api/user/",
+});
 
 export let axiosInstance: AxiosInstance = axios.create({
   baseURL: API_URL + "api/",
 });
 
 export const setAxiosInterceptors = () => {
+  // request interceptor
   axiosInstance.interceptors.request.use(
-    (config) => {
+    async (config) => {
       const creditentialsString =
         localStorage.getItem("creditentials") ||
         sessionStorage.getItem("creditentials");
       if (creditentialsString) {
         const creditentials: Creditentials = JSON.parse(creditentialsString);
-        config.headers.Authorization = `Bearer ${creditentials.token}`;
+
+        const currentTime = Math.floor(Date.now() / 1000);
+        if (creditentials.exp < currentTime + 600) {
+          const newCredentials = await refreshAccessToken();
+          config.headers.Authorization = `Bearer ${newCredentials.token}`;
+        } else {
+          config.headers.Authorization = `Bearer ${creditentials.token}`;
+        }
       }
       return config;
     },
     (error) => {
+      return Promise.reject(error);
+    }
+  );
+
+  // response interceptor
+  axiosInstance.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      const originalRequest = error.config;
+      if (error.response.status === 401) {
+        // Unauthorized
+        try {
+          const newCredentials = await refreshAccessToken();
+          originalRequest.headers[
+            "Authorization"
+          ] = `Bearer ${newCredentials.token}`;
+          return axiosInstance(originalRequest);
+        } catch (refreshError) {
+          console.error("Failed to refresh access token:", refreshError);
+        }
+      }
       return Promise.reject(error);
     }
   );
@@ -63,6 +97,7 @@ export interface Creditentials {
   role: string;
   exp: number;
   token: string;
+  refreshToken: string;
 }
 
 export interface UserProfile {

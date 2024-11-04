@@ -1,42 +1,18 @@
-import React, { useState, useEffect } from "react";
-import { isAdmin, isAuthenticated, login } from "../services/UserService";
+import React, { useState } from "react";
+import { isAdmin, login } from "../services/UserService";
 import "../App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [loggedIn, setLoggedIn] = useState(isAuthenticated());
   const [remember, setRemember] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
 
   document.title = "MyMDb - Login";
-  console.log("auth " + isAuthenticated());
-  console.log("logged " + loggedIn);
-
-  useEffect(() => {
-    if (isAuthenticated()) {
-      if (location.state?.from || document.referrer) {
-        const previousPage = location.state?.from || document.referrer;
-        const isExternalSite =
-          document.referrer &&
-          new URL(document.referrer).origin !== window.location.origin;
-        const isRegisterPage = previousPage?.includes("/register");
-
-        if (isExternalSite || isRegisterPage) {
-          navigate("/", { replace: true });
-        } else {
-          navigate(-1);
-        }
-      } else {
-        navigate(-1);
-      }
-    }
-  }, [loggedIn]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +24,7 @@ const LoginForm: React.FC = () => {
       if (isAdmin()) {
         console.log("User is admin.");
       }
-      setLoggedIn(true);
+      navigate("/");
     } catch (error: any) {
       if (error.response?.data?.message) {
         setError(error.response.data.message);

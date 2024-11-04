@@ -5,6 +5,7 @@ import {
   axiosInstance,
   setAxiosInterceptors,
   UserProfile,
+  axiosRefreshInstance,
 } from "../Data";
 
 export const register = async (email: string, password: string) => {
@@ -38,6 +39,7 @@ export const login = async (
     });
     const creditentials = decodeToken(response.data.token);
     creditentials.token = response.data.token;
+    creditentials.refreshToken = response.data.refreshToken;
     if (remember) {
       saveTokenLocal(creditentials);
     } else {
@@ -48,6 +50,31 @@ export const login = async (
     setAxiosInterceptors();
   } catch (error) {
     console.error("Error logging in user:", error);
+    throw error;
+  }
+};
+
+export const refreshAccessToken = async (): Promise<Creditentials> => {
+  console.log("Refreshing token.");
+  const creditentials = getCreditentials();
+  if (!creditentials) {
+    throw new Error("No creditentials found.");
+  }
+  const token = creditentials.token;
+  const refreshToken = creditentials.refreshToken;
+  try {
+    const response = await axiosRefreshInstance.post("refresh", {
+      token: token,
+      refreshToken: refreshToken,
+    });
+    const creditentials = decodeToken(response.data.token);
+    creditentials.token = response.data.token;
+    creditentials.refreshToken = response.data.refreshToken;
+    saveTokenLocal(creditentials);
+    window.dispatchEvent(new Event("authChange"));
+    return creditentials;
+  } catch (error) {
+    console.error("Error refreshing token:", error);
     throw error;
   }
 };
@@ -118,8 +145,4 @@ export const updateProfile = async (formData: FormData) => {
     console.error("Error updating user profile:", error);
     throw error;
   }
-};
-
-export const getExtension = (filename: string): string => {
-  return "." + filename.split(".").pop();
 };
