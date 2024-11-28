@@ -34,8 +34,6 @@ bld/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
-# Uncomment if you have tasks that create the project's static files in wwwroot
-#wwwroot/
 
 # Visual Studio 2017 auto generated files
 Generated\ Files/
@@ -397,15 +395,17 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 
-# root dir
+# Root Directory
 wwwroot/
 
-# config files
+# Migrations Directory
+Migrations/
+
+# Configuration files
 appsettings*
 *appsettings*
 tsconfig.*
 *config.*
-launchSettings.json
 
-# build files
+# Node Build Files
 dist/

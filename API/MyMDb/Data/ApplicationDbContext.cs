@@ -7,8 +7,10 @@ namespace MyMDb.Data
 {
     public class ApplicationDbContext : IdentityDbContext<AppUser>
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+        private readonly IConfiguration _configuration;
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IConfiguration configuration) : base(options)
         {
+            _configuration = configuration;
         }
 
         public DbSet<AppUser> AppUsers { get; set; }
@@ -44,11 +46,11 @@ namespace MyMDb.Data
                 UserName = "admin",
                 Approved = true,
                 NormalizedUserName = "ADMIN",
-                Email = "secret",
-                NormalizedEmail = "secret",
+                Email = _configuration["Seeding:AdminEmail"]!,
+                NormalizedEmail = _configuration["Seeding:AdminEmail"]!.ToUpper(),
                 EmailConfirmed = true,
                 SecurityStamp = Guid.NewGuid().ToString("D"),
-                PasswordHash = new PasswordHasher<AppUser>().HashPassword(null!, "secret")
+                PasswordHash = new PasswordHasher<AppUser>().HashPassword(null!, _configuration["Seeding:AdminPassword"]!)
             };
 
             var adminProfile = new UserProfile { UserId = adminUser.Id, UserName = "Admin"};
