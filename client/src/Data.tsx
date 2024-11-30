@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from "axios";
 import { refreshAccessToken } from "./services/UserService";
 
-export const API_URL = "https://api_address.com/";
+export const API_URL = import.meta.env.VITE_API_URL;
 
 export let axiosRefreshInstance: AxiosInstance = axios.create({
   baseURL: API_URL + "api/user/",
