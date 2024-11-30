@@ -404,8 +404,6 @@ Migrations/
 # Configuration files
 appsettings*
 *appsettings*
-tsconfig.*
-*config.*
 .env
 
 # Node Build Files
