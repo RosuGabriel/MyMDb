@@ -5,9 +5,6 @@ using MyMDb.Models;
 using MyMDb.ServiceInterfaces;
 using MyMDb.Data;
 using Microsoft.AspNetCore.Authorization;
-using System.IO;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace MyMDb.Controllers
 {

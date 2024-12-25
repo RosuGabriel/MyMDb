@@ -405,6 +405,7 @@ Migrations/
 appsettings*
 *appsettings*
 .env
+vite.config.ts
 
 # Node Build Files
 dist/

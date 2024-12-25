@@ -215,8 +215,6 @@ app.UseCors("AllowMyClient");
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapIdentityApi<AppUser>();
-
 app.MapControllers();
 
 var serverAddress = builder.Configuration["ConnectionDetails:ServerAddress"]; 

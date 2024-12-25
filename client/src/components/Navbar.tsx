@@ -11,6 +11,8 @@ function Navbar() {
   const [searchQuery, setSearch] = useState("");
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [isLargeScreen, setIsLargeScreen] = useState(window.innerWidth >= 992);
+  const [logoWidth, setLogoWidth] = useState(0);
+  const [userButtonsWidth, setUserButtonsWidth] = useState(0);
 
   const handleToggle = () => {
     setIsCollapsed(!isCollapsed);
@@ -21,15 +23,14 @@ function Navbar() {
   };
 
   useEffect(() => {
+    setSearch(new URLSearchParams(location.search).get("search") || "");
+
     const checkAuth = () => {
       setIsLogged(isAuthenticated());
       setIsAdminUser(isAdmin());
     };
 
     checkAuth();
-
-    setSearch(new URLSearchParams(location.search).get("search") || "");
-
     window.addEventListener("storage", checkAuth);
     window.addEventListener("authChange", checkAuth);
     window.addEventListener("resize", handleResize);
@@ -40,6 +41,15 @@ function Navbar() {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  useEffect(() => {
+    const userButtons = document.getElementById("user-buttons");
+    const logoButton = document.getElementById("app-logo");
+    if (userButtons && logoButton) {
+      setUserButtonsWidth(userButtons.offsetWidth);
+      setLogoWidth(logoButton.offsetWidth);
+    }
+  }, [isLogged, isAdminUser]);
 
   const handleSearch = (e: any) => {
     e.preventDefault();
@@ -60,12 +70,15 @@ function Navbar() {
           href="/"
           style={{
             fontWeight: "900",
-            marginRight: isLogged && isLargeScreen ? "154.77px" : "0px",
+            marginRight:
+              isLogged && isLargeScreen
+                ? userButtonsWidth - logoWidth + "px"
+                : "0px",
           }}
         >
           MyMDb
         </a>
-
+        {/* "154.77px" */}
         <button
           className="navbar-toggler"
           type="button"
@@ -113,7 +126,7 @@ function Navbar() {
               </button>
             </form>
 
-            <div className="btn-group">
+            <div id="user-buttons" className="btn-group">
               {isAdminUser && (
                 <a className="btn btn-dark" href="/create">
                   Add Media
@@ -132,9 +145,7 @@ function Navbar() {
                 <a
                   className="btn btn-dark"
                   href="/login"
-                  style={
-                    !isLogged && isCollapsed ? { marginLeft: "30.12px" } : {}
-                  }
+                  style={isCollapsed ? { marginLeft: "30.12px" } : {}}
                 >
                   Login
                 </a>
