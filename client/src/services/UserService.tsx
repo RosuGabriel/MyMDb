@@ -2,16 +2,16 @@ import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import {
   Creditentials,
-  axiosInstance,
+  apiClient,
   setAxiosInterceptors,
   UserProfile,
-  axiosRefreshInstance,
+  refreshApiClient,
 } from "../Data";
 
 export const register = async (email: string, password: string) => {
   const user = { email, password };
   try {
-    const response = await axiosInstance.post("user/register", user, {
+    const response = await apiClient.post("user/register", user, {
       headers: {
         "Content-Type": "application/json",
       },
@@ -33,7 +33,7 @@ export const login = async (
   remember: boolean
 ) => {
   try {
-    const response = await axiosInstance.post("user/login", {
+    const response = await apiClient.post("user/login", {
       email,
       password,
     });
@@ -63,7 +63,7 @@ export const refreshAccessToken = async (): Promise<Creditentials> => {
   const token = creditentials.token;
   const refreshToken = creditentials.refreshToken;
   try {
-    const response = await axiosRefreshInstance.post("refresh", {
+    const response = await refreshApiClient.post("refresh", {
       token: token,
       refreshToken: refreshToken,
     });
@@ -75,6 +75,8 @@ export const refreshAccessToken = async (): Promise<Creditentials> => {
     return creditentials;
   } catch (error) {
     console.error("Error refreshing token:", error);
+    logout();
+    window.location.href = "/login";
     throw error;
   }
 };
@@ -129,7 +131,7 @@ const saveTokenSession = (creditentials: Creditentials) => {
 
 export const fetchProfile = async (): Promise<UserProfile> => {
   try {
-    const response = await axiosInstance.get("user/profile");
+    const response = await apiClient.get("user/profile");
     return response.data;
   } catch (error) {
     console.error("Error fetching user profile:", error);
@@ -139,7 +141,7 @@ export const fetchProfile = async (): Promise<UserProfile> => {
 
 export const updateProfile = async (formData: FormData) => {
   try {
-    const response = await axiosInstance.post("user/edit_profile", formData);
+    const response = await apiClient.post("user/edit_profile", formData);
     return response.data;
   } catch (error) {
     console.error("Error updating user profile:", error);

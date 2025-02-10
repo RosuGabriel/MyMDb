@@ -11,6 +11,8 @@ import {
 import { deleteReview } from "../services/ReviewService";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../App.css";
+import VideoPlayer from "./VideoPlayer";
+import ImageDisplay from "./ImageDisplay";
 
 const ShowMedia: React.FC<{ mediaId: string; season: number }> = ({
   mediaId,
@@ -37,10 +39,12 @@ const ShowMedia: React.FC<{ mediaId: string; season: number }> = ({
         const fetchedMedia = await fetchMediaById(mediaId);
         document.title = fetchedMedia!.title;
         if (fetchedMedia.posterPath) {
-          fetchedMedia.posterPath = API_URL + fetchedMedia.posterPath;
+          fetchedMedia.posterPath =
+            API_URL + "static/" + fetchedMedia.posterPath;
         } else if (fetchedMedia.mediaType === "Episode") {
           if (fetchedMedia.series && fetchedMedia.series.posterPath) {
-            fetchedMedia.posterPath = API_URL + fetchedMedia.series.posterPath;
+            fetchedMedia.posterPath =
+              API_URL + "static/" + fetchedMedia.series.posterPath;
           } else {
             fetchedMedia.posterPath = "/film.png";
           }
@@ -86,7 +90,7 @@ const ShowMedia: React.FC<{ mediaId: string; season: number }> = ({
               {media.mediaType == "Series" && (
                 <a
                   className="btn btn-primary"
-                  href={"/add-episode/" + media.id}
+                  href={"/mymdb/add-episode/" + media.id}
                 >
                   Add Episode
                 </a>
@@ -107,7 +111,7 @@ const ShowMedia: React.FC<{ mediaId: string; season: number }> = ({
               {media.mediaType !== "Series" && (
                 <a
                   className="btn btn-primary"
-                  href={"/add-attribute/" + media.id}
+                  href={"/mymdb/add-attribute/" + media.id}
                 >
                   Add Attribute
                 </a>
@@ -135,7 +139,7 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
   const [prevEpisodeId, setPrevEpisodeId] = useState<string | null>(null);
   const [nextEpisodeId, setNextEpisodeId] = useState<string | null>(null);
   const mediaKeys = ["ArrowRight", "ArrowLeft", " ", "f", "m"];
-  const videoRef = useRef<HTMLVideoElement | null>(null); // referința pentru video
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
     const getEpisodes = async () => {
@@ -145,11 +149,7 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
         document.title =
           title !== "N/A"
             ? title
-            : media.series?.title +
-              " - S" +
-              media.seasonNumber +
-              " - E" +
-              media.episodeNumber;
+            : `${media.series?.title} - S${media.seasonNumber} - E${media.episodeNumber}`;
         setEpisodes(fetchedEpisodes);
       } catch (error) {
         console.error("Error fetching other episodes:", error);
@@ -231,34 +231,34 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
       {media.videoPath && (
         <div className="row justify-content-center mb-4">
           <div className="col-12 col-md-8">
-            <video ref={videoRef} controls className="video-fluid w-100">
-              <source src={API_URL + media.videoPath} type="video/mp4" />
-              {attributes &&
-                attributes.map((attribute) => {
-                  if (attribute.type === "Subtitle") {
-                    return (
-                      <track
-                        key={attribute.language}
-                        kind="subtitles"
-                        src={API_URL + attribute.attributePath}
-                        srcLang={attribute.language}
-                        label={attribute.language}
-                      />
-                    );
-                  }
-                  if (attribute.type === "Dubbing") {
-                    // this is not implemented yet
-                    return null;
-                  }
-                  return null;
-                })}
-              Your browser does not support the video tag.
+            <video
+              ref={videoRef}
+              src={`${API_URL}static/${media.videoPath}`}
+              controls
+              className="w-100 rounded"
+            >
+              {attributes
+                .filter((attr) => attr.type.toLowerCase() === "subtitle")
+                .map((attribute) => (
+                  <track
+                    key={attribute.language}
+                    src={`${API_URL}static/${attribute.attributePath}`}
+                    kind="subtitles"
+                    srcLang={attribute.language}
+                    label={attribute.language}
+                  />
+                ))}
             </video>
+            {/* <VideoPlayer
+              ref={videoRef}
+              src={media.videoPath}
+              attributes={attributes}
+            /> */}
           </div>
         </div>
       )}
       <div className="row">
-        <div className="col-md-8">
+        <div className="col-md-8 bg-dark rounded mb-4">
           <br />
           <h2>{title === "N/A" ? "" : title}</h2>
           {media.mediaType === "Episode" &&
@@ -272,7 +272,7 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
                 >
                   {prevEpisodeId && (
                     <a
-                      href={`/media/${prevEpisodeId}`}
+                      href={`/mymdb/media/${prevEpisodeId}`}
                       className="btn btn-secondary me-2"
                     >
                       Prev Episode
@@ -280,7 +280,7 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
                   )}
                   {nextEpisodeId && (
                     <a
-                      href={`/media/${nextEpisodeId}`}
+                      href={`/mymdb/media/${nextEpisodeId}`}
                       className="btn btn-secondary"
                     >
                       Next Episode
@@ -298,8 +298,13 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
           )}
           <p>{description}</p>
         </div>
-        <div className="col-md-4">
-          <img src={posterPath} alt={title} className="img-fluid rounded" />
+        <div className="col-md-4 mb-4">
+          <ImageDisplay
+            src={posterPath}
+            alt={title}
+            className="img-fluid rounded"
+            backupImagePath="/film.png"
+          />
         </div>
       </div>
     </div>
@@ -314,7 +319,7 @@ const ShowSeries: React.FC<Media & { selectedSeason: number }> = (series) => {
   const handleSeasonChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newSeason = parseInt(e.target.value);
     setSeason(newSeason);
-    navigate(`/media/${series.id}?season=${newSeason}`);
+    navigate(`/mymdb/media/${series.id}?season=${newSeason}`);
   };
 
   return (
@@ -355,7 +360,7 @@ const ShowSeries: React.FC<Media & { selectedSeason: number }> = (series) => {
                         className="col-6 col-sm-3 col-md-3 col-lg-3 mb-2"
                       >
                         <a
-                          href={`/media/${episode.id}`}
+                          href={`/mymdb/media/${episode.id}`}
                           className="btn btn-dark w-100"
                         >
                           Episode {episode.episodeNumber}
@@ -372,7 +377,13 @@ const ShowSeries: React.FC<Media & { selectedSeason: number }> = (series) => {
           </div>
         </div>
         <div className="col-md-4">
-          <img src={posterPath} alt={title} className="img-fluid rounded" />
+          <ImageDisplay
+            src={posterPath}
+            alt={title}
+            className="img-fluid rounded"
+            backupImagePath="/film.png"
+          />
+          {/* <img src={posterPath} alt={title} className="img-fluid rounded" /> */}
         </div>
       </div>
     </div>
@@ -426,7 +437,9 @@ const ShowReviews: React.FC<{ reviewsParam: Review[]; mediaId: string }> = ({
         <div className="d-flex mb-2">
           <a
             className="me-1 btn btn-secondary d-flex justify-content-start"
-            href={userId != null ? "/add-review/" + mediaId : "/login"}
+            href={
+              userId != null ? "/mymdb/add-review/" + mediaId : "/mymdb/login"
+            }
           >
             Add Review
           </a>
@@ -442,28 +455,16 @@ const ShowReviews: React.FC<{ reviewsParam: Review[]; mediaId: string }> = ({
           >
             <div className="row g-0 align-items-center flex-column flex-md-row">
               <div className="profile-section col-12 col-md-2 d-flex flex-column align-items-center justify-content-center pt-3">
-                {review.userProfile && review.userProfile.profilePicPath ? (
-                  <img
-                    src={review.userProfile.profilePicPath}
-                    alt={review.userProfile.userName}
-                    className="img-fluid rounded-circle"
-                    style={{
-                      width: "80px",
-                      height: "80px",
-                      objectFit: "cover",
-                    }}
-                  />
-                ) : (
-                  <img
-                    src={"/profilePic.jpg"}
-                    className="img-fluid rounded-circle"
-                    style={{
-                      width: "80px",
-                      height: "80px",
-                      objectFit: "cover",
-                    }}
-                  />
-                )}
+                <ImageDisplay
+                  src={review.userProfile.profilePicPath}
+                  alt={review.userProfile.userName}
+                  className="img-fluid rounded-circle"
+                  style={{
+                    width: "80px",
+                    height: "80px",
+                    objectFit: "cover",
+                  }}
+                />
                 <p className="username mt-2 text-center">
                   {review.userProfile && review.userProfile.userName
                     ? review.userId == userId

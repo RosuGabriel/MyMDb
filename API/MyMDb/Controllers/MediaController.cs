@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace MyMDb.Controllers
 {
     [ApiController]
-    [Route("api/media")]
+    [Route("mymdb/api/media")]
     public class MediaController : Controller
     {
         private readonly IMediaService _mediaService;
@@ -404,7 +404,7 @@ namespace MyMDb.Controllers
                     return BadRequest("No path provided for poster.");
                 }
 
-                movieToEdit.PosterPath = _configuration["Paths:Images"] + movieToEdit.PosterPath;
+                movieToEdit.PosterPath = _configuration["Paths:Images"] + _mediaService.SanitizeFileName(movieToEdit.PosterPath);
 
                 await _fileProcessingService.ProcessFileAsync(poster, _configuration["Paths:Root"] + movieToEdit.PosterPath);
             }
@@ -420,7 +420,7 @@ namespace MyMDb.Controllers
                     return BadRequest("No path provided for video.");
                 }
 
-                movieToEdit.VideoPath = _configuration["Paths:Videos"] + movieToEdit.VideoPath;
+                movieToEdit.VideoPath = _configuration["Paths:Videos"] + _mediaService.SanitizeFileName(movieToEdit.VideoPath);
 
                 await _fileProcessingService.ProcessVideoFileAsync(video, _configuration["Paths:Root"] + movieToEdit.VideoPath, _mediaService, bufferSize);
             }
@@ -455,14 +455,18 @@ namespace MyMDb.Controllers
 
             if (poster != null)
             {
+                if (!Extensions.IsImageFile(poster.FileName))
+                {
+                    return BadRequest("Not an image file provided for poster.");
+                }
                 if (seriesToEdit.PosterPath == null)
                 {
                     return BadRequest("No path provided for poster");
                 }
 
-                await _fileProcessingService.ProcessFileAsync(poster, seriesToEdit.PosterPath);
+                seriesToEdit.PosterPath = _mediaService.SanitizeFileName(Path.Combine(_configuration["Paths:Images"]!, seriesToEdit.Title!, seriesToEdit.PosterPath));
 
-                currentSeries.PosterPath = seriesToEdit.PosterPath;
+                await _fileProcessingService.ProcessFileAsync(poster, _configuration["Paths:Root"] + seriesToEdit.PosterPath);
             }
 
             _mapper.Map(seriesToEdit, currentSeries);
@@ -495,22 +499,34 @@ namespace MyMDb.Controllers
 
             if (poster != null)
             {
+                if (!Extensions.IsImageFile(poster.FileName))
+                {
+                    return BadRequest("Not an image file provided for poster.");
+                }
                 if (episodeToEdit.PosterPath == null)
                 {
                     return BadRequest("No path provided for poster");
                 }
-                await _fileProcessingService.ProcessFileAsync(poster, episodeToEdit.PosterPath);
-                currentEpisode.PosterPath = episodeToEdit.PosterPath;
+
+                episodeToEdit.PosterPath = _mediaService.SanitizeFileName(Path.Combine(_configuration["Paths:Images"]!, currentEpisode.Series!.Title, episodeToEdit.PosterPath));
+
+                await _fileProcessingService.ProcessFileAsync(poster, _configuration["Paths:Root"] + episodeToEdit.PosterPath);
             }
 
             if (video != null)
             {
+                if (!Extensions.IsVideoFile(video.FileName))
+                {
+                    return BadRequest("Not a video file provided for video.");
+                }
                 if (episodeToEdit.VideoPath == null)
                 {
                     return BadRequest("No path provided for video");
                 }
-                await _fileProcessingService.ProcessVideoFileAsync(video, episodeToEdit.VideoPath, _mediaService, bufferSize);
-                currentEpisode.VideoPath = episodeToEdit.VideoPath;
+
+                episodeToEdit.VideoPath = _mediaService.SanitizeFileName(Path.Combine(_configuration["Paths:Videos"]!, currentEpisode.Series!.Title, episodeToEdit.VideoPath));
+
+                await _fileProcessingService.ProcessVideoFileAsync(video, _configuration["Paths:Root"] + episodeToEdit.VideoPath, _mediaService, bufferSize);
             }
 
             _mapper.Map(episodeToEdit, currentEpisode);

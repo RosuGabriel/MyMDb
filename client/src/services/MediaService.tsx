@@ -1,10 +1,10 @@
-import { Media, axiosInstance } from "../Data";
+import { Media, apiClient } from "../Data";
 
 const MEDIA_URL = "media/";
 
 export const fetchMedia = async (): Promise<Media[]> => {
   try {
-    const response = await axiosInstance.get<{ $values: Media[] }>(
+    const response = await apiClient.get<{ $values: Media[] }>(
       MEDIA_URL + "movies_and_series"
     );
     return response.data.$values;
@@ -16,7 +16,7 @@ export const fetchMedia = async (): Promise<Media[]> => {
 
 export const fetchMovies = async (): Promise<Media[]> => {
   try {
-    const response = await axiosInstance.get<{ $values: Media[] }>(
+    const response = await apiClient.get<{ $values: Media[] }>(
       MEDIA_URL + "movies"
     );
     return response.data.$values;
@@ -28,7 +28,7 @@ export const fetchMovies = async (): Promise<Media[]> => {
 
 export const fetchSeries = async (): Promise<Media[]> => {
   try {
-    const response = await axiosInstance.get<{ $values: Media[] }>(
+    const response = await apiClient.get<{ $values: Media[] }>(
       MEDIA_URL + "series"
     );
     return response.data.$values;
@@ -39,7 +39,7 @@ export const fetchSeries = async (): Promise<Media[]> => {
 };
 
 export const fetchMediaById = async (id: string): Promise<Media> => {
-  const response = await axiosInstance.get(MEDIA_URL + id);
+  const response = await apiClient.get(MEDIA_URL + id);
   return response.data;
 };
 
@@ -73,7 +73,7 @@ export const createMovie = async (
   }
 
   try {
-    const response = await axiosInstance.post<Media>(
+    const response = await apiClient.post<Media>(
       MEDIA_URL + "add_movie",
       formData,
       {
@@ -110,7 +110,7 @@ export const createSeries = async (
   }
 
   try {
-    const response = await axiosInstance.post<Media>(
+    const response = await apiClient.post<Media>(
       MEDIA_URL + "add_series",
       formData,
       {
@@ -160,7 +160,7 @@ export const createEpisode = async (
   }
 
   try {
-    const response = await axiosInstance.post<Media>(
+    const response = await apiClient.post<Media>(
       MEDIA_URL + "add_episode",
       formData,
       {
@@ -178,7 +178,7 @@ export const createEpisode = async (
 
 export const deleteMedia = async (id: string): Promise<void> => {
   try {
-    await axiosInstance.delete(MEDIA_URL + "delete_media/" + id);
+    await apiClient.delete(MEDIA_URL + "delete_media/" + id);
   } catch (error) {
     console.error("Error deleting media:", error);
     throw error;

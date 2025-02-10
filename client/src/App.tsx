@@ -44,37 +44,37 @@ const App: React.FC = () => {
           style={{ paddingTop: `${navbarHeight}px` }}
         >
           <Routes>
-            <Route path="/" element={<Navigate to="/media" />} />
-            <Route path="*" element={<Navigate to="/media" />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            <Route path="/" element={<Navigate to="/mymdb/media" />} />
+            <Route path="/mymdb" element={<Navigate to="/mymdb/media" />} />
+            <Route path="/mymdb/login" element={<Login />} />
+            <Route path="/mymdb/register" element={<Register />} />
 
             <Route
-              path="/media"
+              path="/mymdb/media"
               element={<ProtectedRoute component={ListMedia} />}
             />
             <Route
-              path="/media/:id"
+              path="/mymdb/media/:id"
               element={<ProtectedRoute component={ShowMedia} />}
             />
             <Route
-              path="/profile"
+              path="/mymdb/profile"
               element={<ProtectedRoute component={Profile} />}
             />
             <Route
-              path="/create"
+              path="/mymdb/create"
               element={<ProtectedRoute component={CreateMedia} />}
             />
             <Route
-              path="/add-episode/:id"
+              path="/mymdb/add-episode/:id"
               element={<ProtectedRoute component={AddEpisode} />}
             />
             <Route
-              path="/add-review/:id"
+              path="/mymdb/add-review/:id"
               element={<ProtectedRoute component={AddReview} />}
             />
             <Route
-              path="/add-attribute/:id"
+              path="/mymdb/add-attribute/:id"
               element={<ProtectedRoute component={AddAttribute} />}
             />
           </Routes>

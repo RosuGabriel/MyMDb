@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { API_URL, UserProfile } from "../Data";
 import { getFileExtension } from "../services/MediaService";
 import { fetchProfile, updateProfile } from "../services/UserService";
+import ImageDisplay from "./ImageDisplay";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const Profile: React.FC = () => {
@@ -72,16 +73,23 @@ const Profile: React.FC = () => {
           <h2>User Profile</h2>
         </div>
         <div className="card-body text-center">
-          <img
+          <ImageDisplay
+            src={profile.profilePicPath}
+            backupImagePath="/profilePic.jpg"
+            alt="Avatar"
+            className="rounded-circle mb-3"
+            style={{ width: "150px", height: "150px", objectFit: "cover" }}
+          />
+          {/* <img
             src={
               profile.profilePicPath
-                ? API_URL + profile.profilePicPath
+                ? API_URL + "static/" + profile.profilePicPath
                 : "profilePic.jpg"
             }
             alt="Profile"
             className="rounded-circle mb-3"
             style={{ width: "150px", height: "150px", objectFit: "cover" }}
-          />
+          /> */}
           {isEditing && (
             <div className="mb-3">
               <label htmlFor="profilePic" className="form-label">

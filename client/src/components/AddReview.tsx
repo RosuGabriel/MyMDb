@@ -18,7 +18,7 @@ const CreateReview: React.FC<AddReviewProps> = ({ mediaId }) => {
     try {
       const addedReview = await addReview(newReview);
       console.log("Review added successfully:", addedReview);
-      navigate(`/media/${mediaId}`);
+      navigate(`/mymdb/media/${mediaId}`);
     } catch (error) {
       console.error("Error adding review:", error);
     }

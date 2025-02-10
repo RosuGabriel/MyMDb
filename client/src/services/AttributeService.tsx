@@ -1,4 +1,4 @@
-import { Attribute, axiosInstance } from "../Data";
+import { Attribute, apiClient } from "../Data";
 import { generateUniqueFileName } from "./MediaService";
 
 const API_URL = "media/";
@@ -22,7 +22,7 @@ export const addAttribute = async (
   console.log(file?.name);
 
   try {
-    const response = await axiosInstance.post<Attribute>(
+    const response = await apiClient.post<Attribute>(
       API_URL + "add_attribute",
       formData,
       {

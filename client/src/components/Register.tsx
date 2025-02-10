@@ -19,7 +19,7 @@ const RegisterForm: React.FC = () => {
     try {
       await register(email, password);
       console.log("User registered.");
-      navigate("/login");
+      navigate("/mymdb/login");
     } catch (error: any) {
       if (error.response && error.response.data && error.response.data.Errors) {
         const keys = Object.keys(error.response.data.Errors);

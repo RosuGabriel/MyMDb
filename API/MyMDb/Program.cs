@@ -7,6 +7,7 @@ using MyMDb.Repositories;
 using MyMDb.RepositoryInterfaces;
 using MyMDb.ServiceInterfaces;
 using MyMDb.Services;
+using MyMDb.Helpers;
 using System.Text.Json.Serialization;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Http.Features;
@@ -19,6 +20,8 @@ using Serilog;
 
 // ------------------------------ Builder
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddSingleton<ProtectedStaticFilesMiddleware>();
 
 var isLinux = Environment.OSVersion.Platform == PlatformID.Unix;
 
@@ -171,25 +174,22 @@ builder.Services.AddCors(options =>
             });
 });
 
-builder.Logging.ClearProviders();
-builder.Services.AddLogging(logging =>
-{
-    logging.ClearProviders();
-    logging.AddConsole();
-    logging.AddDebug();
-    if (isLinux)
-    {
-        logging.AddSerilog(new LoggerConfiguration()
-                        .WriteTo.File("/var/www/MyMDb/api.log")
-                        .CreateLogger());
-    }
-});
-
-
 // ------------------------------ App
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
+
+if (int.Parse(builder.Configuration["ProtectStaticFiles"]!) == 1)
+{
+    app.UseMiddleware<ProtectedStaticFilesMiddleware>("/mymdb/static");
+}
+
+app.UseCors("AllowMyClient");
+
+app.MapControllers();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -199,23 +199,18 @@ if (app.Environment.IsDevelopment())
     app.UseStaticFiles(new StaticFileOptions
     {
         FileProvider = new PhysicalFileProvider(rootPath),
-        RequestPath = ""
+        RequestPath = "/static"
     });
 }
 else
 {
-    app.UseStaticFiles();
+    var rootPath = Path.Combine(Directory.GetCurrentDirectory(), builder.Configuration["Paths:Root"]!);
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(rootPath),
+        RequestPath = "/mymdb/static"
+    });
 }
 
-app.UseHttpsRedirection();
-
-app.UseRouting();
-app.UseCors("AllowMyClient");
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllers();
-
-var serverAddress = builder.Configuration["ConnectionDetails:ServerAddress"]; 
+var serverAddress = builder.Configuration["ConnectionDetails:ServerAddress"];
 app.Run(serverAddress);

@@ -19,7 +19,7 @@ const CreateAttribute: React.FC<AddAttributeProps> = ({ mediaId }) => {
     try {
       const addedAttribute = await addAttribute(newAttribute, file);
       console.log("Attribute added successfully:", addedAttribute);
-      navigate(`/media/${mediaId}`);
+      navigate(`/mymdb/media/${mediaId}`);
     } catch (error) {
       console.error("Error adding attribute:", error);
     }

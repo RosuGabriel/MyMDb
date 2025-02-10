@@ -11,7 +11,7 @@ using System.Security.Claims;
 namespace MyMDb.Controllers
 {
     [ApiController]
-    [Route("api/user")]
+    [Route("mymdb/api/user")]
     public class AccountController : Controller
     {
         private readonly IUserService _userService;

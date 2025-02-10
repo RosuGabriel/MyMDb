@@ -58,7 +58,7 @@ function Navbar() {
     if (!searchQuery.trim()) {
       searchParams.delete("search");
     }
-    navigate({ pathname: "/media", search: searchParams.toString() });
+    navigate({ pathname: "/mymdb/media", search: searchParams.toString() });
   };
 
   return (
@@ -128,23 +128,27 @@ function Navbar() {
 
             <div id="user-buttons" className="btn-group">
               {isAdminUser && (
-                <a className="btn btn-dark" href="/create">
+                <a className="btn btn-dark" href="/mymdb/create">
                   Add Media
                 </a>
               )}
               {isLogged ? (
                 <>
-                  <a className="btn btn-dark" href="/profile">
+                  <a className="btn btn-dark" href="/mymdb/profile">
                     Profile
                   </a>
-                  <button className="btn btn-dark" onClick={logout}>
+                  <a
+                    className="btn btn-dark"
+                    onClick={logout}
+                    href="/mymdb/login"
+                  >
                     Logout
-                  </button>
+                  </a>
                 </>
               ) : (
                 <a
                   className="btn btn-dark"
-                  href="/login"
+                  href="/mymdb/login"
                   style={isCollapsed ? { marginLeft: "30.12px" } : {}}
                 >
                   Login

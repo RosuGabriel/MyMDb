@@ -3,17 +3,44 @@ import { refreshAccessToken } from "./services/UserService";
 
 export const API_URL = import.meta.env.VITE_API_URL;
 
-export let axiosRefreshInstance: AxiosInstance = axios.create({
+export let refreshApiClient: AxiosInstance = axios.create({
   baseURL: API_URL + "api/user/",
 });
 
-export let axiosInstance: AxiosInstance = axios.create({
+export let apiClient: AxiosInstance = axios.create({
   baseURL: API_URL + "api/",
+});
+
+export let staticClient: AxiosInstance = axios.create({
+  baseURL: API_URL + "static/",
 });
 
 export const setAxiosInterceptors = () => {
   // request interceptor
-  axiosInstance.interceptors.request.use(
+  apiClient.interceptors.request.use(
+    async (config) => {
+      const creditentialsString =
+        localStorage.getItem("creditentials") ||
+        sessionStorage.getItem("creditentials");
+      if (creditentialsString) {
+        const creditentials: Creditentials = JSON.parse(creditentialsString);
+
+        const currentTime = Math.floor(Date.now() / 1000);
+        if (creditentials.exp < currentTime + 600) {
+          const newCredentials = await refreshAccessToken();
+          config.headers.Authorization = `Bearer ${newCredentials.token}`;
+        } else {
+          config.headers.Authorization = `Bearer ${creditentials.token}`;
+        }
+      }
+      return config;
+    },
+    (error) => {
+      return Promise.reject(error);
+    }
+  );
+
+  staticClient.interceptors.request.use(
     async (config) => {
       const creditentialsString =
         localStorage.getItem("creditentials") ||
@@ -37,7 +64,7 @@ export const setAxiosInterceptors = () => {
   );
 
   // response interceptor
-  axiosInstance.interceptors.response.use(
+  apiClient.interceptors.response.use(
     (response) => response,
     async (error) => {
       const originalRequest = error.config;
@@ -48,7 +75,7 @@ export const setAxiosInterceptors = () => {
           originalRequest.headers[
             "Authorization"
           ] = `Bearer ${newCredentials.token}`;
-          return axiosInstance(originalRequest);
+          return apiClient(originalRequest);
         } catch (refreshError) {
           console.error("Failed to refresh access token:", refreshError);
         }

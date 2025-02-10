@@ -108,7 +108,7 @@ const LoginForm: React.FC = () => {
             </div>
           </div>
 
-          <a href="/register" className="d-block mb-4">
+          <a href="/mymdb/register" className="d-block mb-4">
             Don't have an account? Register here.
           </a>
         </div>

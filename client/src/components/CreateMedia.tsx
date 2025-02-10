@@ -69,7 +69,7 @@ export const CreateMedia: React.FC = () => {
   useEffect(() => {
     if (uploadProgress === 100) {
       setUploadProgress(0);
-      navigate("/media");
+      navigate("/mymdb/media");
     }
   }, [uploadProgress]);
 
@@ -247,7 +247,7 @@ const CreateEpisode: React.FC<{ seriesId: string }> = ({ seriesId: id }) => {
   useEffect(() => {
     if (uploadProgress === 100) {
       setUploadProgress(0);
-      navigate("/media/" + id);
+      navigate("/mymdb/media/" + id);
     }
   }, [uploadProgress]);
 

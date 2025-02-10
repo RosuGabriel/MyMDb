@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Media, API_URL } from "../Data";
+import { Media } from "../Data";
 import { useNavigate, useLocation } from "react-router";
 import { fetchMedia } from "../services/MediaService";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../App.css";
+import MediaItem from "./MediaItem";
+import ContinueWatching from "./ContinueWatching";
 
 const ListMedia: React.FC = () => {
   const navigate = useNavigate();
@@ -32,11 +34,7 @@ const ListMedia: React.FC = () => {
         );
       });
 
-      let updatedMedia = fetchedMedia.map((m) => ({
-        ...m,
-        posterPath: m.posterPath ? API_URL + m.posterPath : defaultImage,
-      }));
-
+      let updatedMedia = fetchedMedia;
       setAllMedia(updatedMedia);
 
       // Filter by media type
@@ -117,6 +115,8 @@ const ListMedia: React.FC = () => {
       </div>
 
       <div className="container-fluid">
+        <ContinueWatching />
+
         <div className="row d-flex">
           {media.map((m) => (
             <MediaItem key={m.id} media={m} defaultImage={defaultImage} />
@@ -124,42 +124,6 @@ const ListMedia: React.FC = () => {
         </div>
       </div>
     </div>
-  );
-};
-
-const MediaItem: React.FC<{ media: Media; defaultImage: string }> = ({
-  media,
-  defaultImage,
-}) => {
-  const [imageSrc, setImageSrc] = useState<string>(defaultImage);
-
-  useEffect(() => {
-    const img = new Image();
-    img.src = media.posterPath;
-    img.onload = () => setImageSrc(media.posterPath);
-  }, [media.posterPath]);
-
-  const handleImageSrcError = () => {
-    setImageSrc(defaultImage);
-  };
-
-  return (
-    <a
-      className="col-6 col-sm-4 col-md-4 col-lg-3 col-xl-2 mb-4 text-decoration-none"
-      href={"/media/" + media.id}
-    >
-      <div className="card media-card btn btn-dark text-secondary h-100 d-flex flex-column p-1">
-        <img
-          src={imageSrc}
-          onError={handleImageSrcError}
-          alt={media.title}
-          className="card-img-top media-card-img rounded"
-        />
-        <div className="card-body d-flex justify-content-center align-items-center flex-grow-1">
-          <h5 className="card-title m-0 text-center">{media.title}</h5>
-        </div>
-      </div>
-    </a>
   );
 };
 
