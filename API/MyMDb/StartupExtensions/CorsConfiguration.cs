@@ -12,7 +12,8 @@
                 {
                     policyBuilder.WithOrigins(allowedClients!)
                                  .AllowAnyHeader()
-                                 .AllowAnyMethod();
+                                 .AllowAnyMethod()
+                                 .AllowCredentials();
                 });
             });
         }

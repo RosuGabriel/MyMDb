@@ -19,6 +19,7 @@ namespace MyMDb.Data
         public DbSet<Review> Reviews { get; set; }
         public DbSet<MediaAttribute> MediaAttributes { get; set; }
         public DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
+        public DbSet<ContinueWatching> ContinueWatchings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -91,7 +92,8 @@ namespace MyMDb.Data
             builder.Entity<Media>()
                 .HasMany(m => m.MediaAttributes)
                 .WithOne(ma => ma.Media)
-                .HasForeignKey(ma => ma.MediaId);
+                .HasForeignKey(ma => ma.MediaId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // movie types (movie, series or episode)
             builder.Entity<Media>()
@@ -128,6 +130,16 @@ namespace MyMDb.Data
                 .WithMany(u => u.Reviews)
                 .HasForeignKey(r => r.UserId)
                 .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // media - continue watching
+            builder.Entity<ContinueWatching>()
+                .HasKey(m => m.Id);
+
+            builder.Entity<ContinueWatching>()
+                .HasOne(cw => cw.Media)
+                .WithMany(m => m.ContinueWatchings)
+                .HasForeignKey(cw => cw.MediaId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

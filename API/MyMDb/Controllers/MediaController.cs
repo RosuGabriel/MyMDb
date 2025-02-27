@@ -5,6 +5,7 @@ using MyMDb.Models;
 using MyMDb.ServiceInterfaces;
 using MyMDb.Data;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace MyMDb.Controllers
 {
@@ -13,24 +14,28 @@ namespace MyMDb.Controllers
     public class MediaController : Controller
     {
         private readonly IMediaService _mediaService;
+        private readonly IContinueWatchingService _continueWatchingService;
         private readonly IFileProcessingService _fileProcessingService;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
         private readonly ApplicationDbContext _context;
         private readonly int bufferSize;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public MediaController(IMediaService mediaService, IFileProcessingService fileProcessingService, IMapper mapper, IConfiguration configuration, ApplicationDbContext context)
+        public MediaController(IMediaService mediaService, IContinueWatchingService continueWatchingService, IFileProcessingService fileProcessingService, IMapper mapper, IConfiguration configuration, ApplicationDbContext context, IHttpContextAccessor httpContextAccessor)
         {
             _mediaService = mediaService;
+            _continueWatchingService = continueWatchingService;
             _fileProcessingService = fileProcessingService;
             _mapper = mapper;
             _configuration = configuration;
             _context = context;
+            _httpContextAccessor = httpContextAccessor;
             if (_configuration["VideoBufferSize"] != null)
             {
                 bufferSize = int.Parse(_configuration["VideoBufferSize"]!);
             }
-            else 
+            else
             {
                 bufferSize = 10000;
             }
@@ -162,7 +167,7 @@ namespace MyMDb.Controllers
                 return NotFound("Media for attribute not found");
             }
 
-            if (file == null) 
+            if (file == null)
             {
                 return BadRequest("Attribute file not existent");
             }
@@ -306,7 +311,7 @@ namespace MyMDb.Controllers
 
             var series = await _mediaService.GetSeriesById(newEpisode.SeriesId);
 
-            if (series == null) 
+            if (series == null)
             {
                 return BadRequest("The episode is added to an non-existent series");
             }
@@ -555,6 +560,173 @@ namespace MyMDb.Controllers
             }
 
             return Ok();
+        }
+
+        // -------------------- continue watching
+
+        [HttpGet]
+        [Authorize]
+        [Route("continue_watching/{mediaId}/{episodeId?}")]
+        public async Task<IActionResult> GetContinueWatchingById(Guid mediaId, Guid? episodeId = null)
+        {
+            if (_httpContextAccessor.HttpContext == null)
+            {
+                return NotFound();
+            }
+
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+            {
+                return BadRequest("User not provided");
+            }
+
+            try
+            {
+                var continueWatchings = await _continueWatchingService.GetByUserIdAndMediaIdAsync(userId, mediaId, episodeId);
+
+                if (continueWatchings == null)
+                {
+                    return NotFound("Continue watching not found");
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+
+                }
+
+                return Ok(continueWatchings);
+            }
+            catch (ActionResponseExceptions.BaseException ex)
+            {
+                return StatusCode(ex.StatusCode, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An unexpected error occurred: " + ex.Message);
+            }
+        }
+
+        [HttpGet]
+        [Authorize]
+        [Route("continue_watching")]
+        public async Task<IActionResult> GetContinueWatching()
+        {
+            if (_httpContextAccessor.HttpContext == null)
+            {
+                return NotFound();
+            }
+
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+            {
+                return BadRequest("User not provided");
+            }
+
+            try
+            {
+                var continueWatchings = await _continueWatchingService.GetAllByUserIdAsync(userId);
+
+                if (continueWatchings == null)
+                {
+                    return NotFound("Continue watching not found");
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+
+                }
+
+                return Ok(continueWatchings);
+            }
+            catch (ActionResponseExceptions.BaseException ex)
+            {
+                return StatusCode(ex.StatusCode, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An unexpected error occurred: " + ex.Message);
+            }
+        }
+
+        [HttpPost]
+        [Authorize]
+        [Route("continue_watching")]
+        public async Task<IActionResult> AddOrUpdateContinueWatching([FromBody] ContinueWatching updatedContinueWatching)
+        {
+            if (_httpContextAccessor.HttpContext == null)
+            {
+                return NotFound();
+            }
+
+            if (updatedContinueWatching.MediaId == null)
+            {
+                return BadRequest("ContinueWatching not provided");
+            }
+
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+            {
+                return BadRequest("User not provided");
+            }
+
+            try
+            {
+                var continueWatching = await _continueWatchingService.AddOrUpdateAsync(userId, updatedContinueWatching.MediaId, updatedContinueWatching.EpisodeId, updatedContinueWatching.WatchedTime, updatedContinueWatching.Duration);
+                
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                
+                return Ok(continueWatching);
+            }
+            catch (ActionResponseExceptions.BaseException ex)
+            {
+                return StatusCode(ex.StatusCode, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An unexpected error occurred: " + ex.Message);
+            }
+        }
+
+        [HttpDelete]
+        [Authorize]
+        [Route("continue_watching")]
+        public async Task<IActionResult> DeleteContinueWatching([FromBody] ContinueWatching continueWatching)
+        {
+            if (_httpContextAccessor.HttpContext == null)
+            {
+                return NotFound();
+            }
+
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+            {
+                return BadRequest("User not provided");
+            }
+
+            try
+            {
+                await _continueWatchingService.DeleteAsync(userId, continueWatching.MediaId, continueWatching.EpisodeId);
+                
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                return Ok();
+            }
+            catch (ActionResponseExceptions.BaseException ex)
+            {
+                return StatusCode(ex.StatusCode, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An unexpected error occurred: " + ex.Message);
+            }
         }
     }
 }

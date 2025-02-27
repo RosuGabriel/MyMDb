@@ -55,13 +55,19 @@ export const login = async (
 };
 
 export const refreshAccessToken = async (): Promise<Creditentials> => {
-  console.log("Refreshing token.");
+  while (localStorage.getItem("refreshing")) {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  localStorage.setItem("refreshing", "x");
+
   const creditentials = getCreditentials();
   if (!creditentials) {
     throw new Error("No creditentials found.");
   }
+
   const token = creditentials.token;
   const refreshToken = creditentials.refreshToken;
+
   try {
     const response = await refreshApiClient.post("refresh", {
       token: token,
@@ -72,11 +78,13 @@ export const refreshAccessToken = async (): Promise<Creditentials> => {
     creditentials.refreshToken = response.data.refreshToken;
     saveTokenLocal(creditentials);
     window.dispatchEvent(new Event("authChange"));
+    localStorage.removeItem("refreshing");
     return creditentials;
   } catch (error) {
     console.error("Error refreshing token:", error);
     logout();
-    window.location.href = "/login";
+    window.location.href = "/mymdb/login";
+    localStorage.removeItem("refreshing");
     throw error;
   }
 };

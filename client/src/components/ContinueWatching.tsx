@@ -1,37 +1,49 @@
 import React, { useState, useEffect } from "react";
-import { Media } from "../Data";
-import { fetchMedia } from "../services/MediaService";
+import { IContinueWatching } from "../Data";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../App.css";
-import MediaItem from "./MediaItem";
+import ContinueWatchingItem from "./ContinueWatchingItem";
+import { fetchContinueWatching } from "../services/ContinueWatchingService";
 
 const ContinueWatching: React.FC = () => {
-  const [watchingItems, setWatchingItems] = useState<Media[]>([]);
+  const [watchingItems, setWatchingItems] = useState<IContinueWatching[]>([]);
 
   useEffect(() => {
-    const fetchMediaList = async () => {
-      let fetchedMedia: Media[] = await fetchMedia();
-      fetchedMedia = fetchedMedia.sort((a, b) => {
-        return (
-          new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime()
-        );
-      });
-      setWatchingItems(fetchedMedia);
+    const fetchCWList = async () => {
+      let fetchedCW: IContinueWatching[] = await fetchContinueWatching();
+      setWatchingItems(fetchedCW);
     };
 
-    fetchMediaList();
+    fetchCWList();
   }, []);
+
+  function handleRemoveItem(id: string) {
+    setWatchingItems(watchingItems.filter((item) => item.mediaId !== id));
+  }
 
   return (
     <>
-      <div
-        className="d-flex overflow-auto bg-warning mb-3 p-2 rounded"
-        style={{ whiteSpace: "nowrap", gap: "15px" }}
-      >
-        {watchingItems.map((media) => (
-          <MediaItem key={media.id} media={media} defaultImage="/film.png" />
-        ))}
-      </div>
+      {watchingItems.length > 0 && (
+        <div className="bg-dark p-1 rounded mb-4 border border-warning border-3">
+          <h2 className="text-secondary mb-1">Continue Watching</h2>
+          <div
+            className="d-flex overflow-auto"
+            style={{
+              gap: "12px",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {watchingItems.map((continueWatch) => (
+              <ContinueWatchingItem
+                key={continueWatch.mediaId}
+                cw={continueWatch}
+                defaultImage="/film.png"
+                onDelete={handleRemoveItem}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </>
   );
 };

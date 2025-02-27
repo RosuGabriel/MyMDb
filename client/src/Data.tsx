@@ -49,7 +49,7 @@ export const setAxiosInterceptors = () => {
         const creditentials: Creditentials = JSON.parse(creditentialsString);
 
         const currentTime = Math.floor(Date.now() / 1000);
-        if (creditentials.exp < currentTime + 600) {
+        if (creditentials.exp < currentTime + 500) {
           const newCredentials = await refreshAccessToken();
           config.headers.Authorization = `Bearer ${newCredentials.token}`;
         } else {
@@ -68,13 +68,14 @@ export const setAxiosInterceptors = () => {
     (response) => response,
     async (error) => {
       const originalRequest = error.config;
+      // let newCredentials;
       if (error.response.status === 401) {
         // Unauthorized
         try {
           const newCredentials = await refreshAccessToken();
           originalRequest.headers[
             "Authorization"
-          ] = `Bearer ${newCredentials.token}`;
+          ] = `Bearer ${newCredentials?.token}`;
           return apiClient(originalRequest);
         } catch (refreshError) {
           console.error("Failed to refresh access token:", refreshError);
@@ -147,3 +148,13 @@ export const Languages = [
   "Deutsch",
   "Español",
 ];
+
+export interface IContinueWatching {
+  mediaId: string;
+  episodeId: string;
+  watchedTime: number;
+  duration: number;
+  episodeNumber: number;
+  seasonNumber: number;
+  posterPath: string;
+}

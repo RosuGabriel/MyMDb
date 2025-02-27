@@ -14,6 +14,5 @@ builder.Services.ConfigureDatabase(builder);
 var app = builder.Build();
 
 app.ConfigureMiddlewares();
-app.ConfigureStaticFileRoutes(builder);
 
 app.Run(builder.Configuration["ConnectionDetails:ServerAddress"]);

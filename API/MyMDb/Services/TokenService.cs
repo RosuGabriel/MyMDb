@@ -25,7 +25,7 @@ namespace MyMDb.Services
             var userRefreshToken = await _tokenRepository.GetRefreshTokenAsync(userId, refreshToken);
             if (userRefreshToken != null)
             {
-                await _tokenRepository.Delete(userRefreshToken);
+                await _tokenRepository.DeleteAsync(userRefreshToken);
             }
         }
 
@@ -89,6 +89,11 @@ namespace MyMDb.Services
         public async Task<bool> ValidateRefreshTokenAsync(string userId, string refreshToken)
         {
             var userRefreshToken = await _tokenRepository.GetRefreshTokenAsync(userId, refreshToken);
+
+            if (userRefreshToken?.Expiration <= DateTime.UtcNow)
+            {
+                await _tokenRepository.DeleteAsync(userRefreshToken);
+            }
 
             return userRefreshToken != null && userRefreshToken.Expiration > DateTime.UtcNow;
         }

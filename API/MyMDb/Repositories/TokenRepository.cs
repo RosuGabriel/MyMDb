@@ -15,11 +15,6 @@ namespace MyMDb.Repositories
         {
             var token = await _dbSet.FirstOrDefaultAsync(t => t.UserId == userId && t.RefreshToken == refreshToken);
             
-            if (token == null)
-            {
-                return null;
-            }
-            
             return token;
         }
     }

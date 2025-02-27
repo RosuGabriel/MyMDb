@@ -178,7 +178,7 @@ namespace MyMDb.Services
                 System.IO.File.Delete(Path.Combine(_configuration["Paths:Root"]!, mediaToDelete.VideoPath));
             }
 
-            await _MediaRepository.Delete(mediaToDelete);
+            await _MediaRepository.DeleteAsync(mediaToDelete);
 
             return true;
         }

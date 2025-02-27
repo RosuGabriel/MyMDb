@@ -1,6 +1,6 @@
 import { Media, apiClient } from "../Data";
 
-const MEDIA_URL = "media/";
+export const MEDIA_URL = "media/";
 
 export const fetchMedia = async (): Promise<Media[]> => {
   try {

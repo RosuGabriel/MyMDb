@@ -90,7 +90,7 @@ const ListMedia: React.FC = () => {
 
   return (
     <div className="media-page">
-      <div className="btn-group p-3 mb-4 media-buttons" role="group">
+      <div className="btn-group p-3 my-2 media-buttons" role="group">
         <button
           type="button"
           className={`btn btn-dark ${mediaType === "all" ? "active" : ""}`}
@@ -116,7 +116,6 @@ const ListMedia: React.FC = () => {
 
       <div className="container-fluid">
         <ContinueWatching />
-
         <div className="row d-flex">
           {media.map((m) => (
             <MediaItem key={m.id} media={m} defaultImage={defaultImage} />

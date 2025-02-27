@@ -25,6 +25,7 @@ namespace MyMDb.StartupExtensions
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IMediaAttributeRepository, MediaAttributeRepository>();
             services.AddScoped<ITokenRepository, TokenRepository>();
+            services.AddScoped<IContinueWatchingRepository, ContinueWatchingRepository>();
 
             // Services
             services.AddScoped<IMediaService, MediaService>();
@@ -32,6 +33,7 @@ namespace MyMDb.StartupExtensions
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IFileProcessingService, FileProcessingService>();
             services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IContinueWatchingService, ContinueWatchingService>();
 
             // Identity
             services.AddIdentity<AppUser, IdentityRole>(options =>

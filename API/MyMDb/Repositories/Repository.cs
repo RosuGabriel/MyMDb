@@ -37,14 +37,14 @@ namespace MyMDb.Repositories
             return entity;
         }
 
-        public async Task Update(T entity)
+        public async Task UpdateAsync(T entity)
         {
             _dbSet.Attach(entity);
             _context.Entry(entity).State = EntityState.Modified;
             await SaveChangesAsync();
         }
 
-        public async Task Delete(T entity)
+        public async Task DeleteAsync(T entity)
         {
             _dbSet.Remove(entity);
             await SaveChangesAsync();

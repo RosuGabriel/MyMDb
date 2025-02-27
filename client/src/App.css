@@ -1,10 +1,21 @@
 html,
 body,
 #root {
-  background-color: #282c34;
-  color: white;
+  background-color: #282c34 !important;
+  color: white !important;
   height: 100%;
   margin: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  html,
+  body,
+  #root {
+    background-color: #282c34 !important;
+    color: white !important;
+    height: 100%;
+    margin: 0;
+  }
 }
 
 .media-page {

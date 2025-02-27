@@ -27,7 +27,7 @@ namespace MyMDb.Services
 
         public async Task DeleteReview(Review review)
         {
-            await _reviewRepository.Delete(review);
+            await _reviewRepository.DeleteAsync(review);
         }
 
         public async Task<Review?> GetByUserAsync(string userId, Guid mediaId)

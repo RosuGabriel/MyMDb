@@ -1,5 +1,4 @@
-﻿using MyMDb.DTOs;
-using MyMDb.Models;
+﻿using MyMDb.Models;
 
 namespace MyMDb.ServiceInterfaces
 {

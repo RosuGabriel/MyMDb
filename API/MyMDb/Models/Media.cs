@@ -13,6 +13,7 @@ namespace MyMDb.Models
 
         public virtual ICollection<Review>? Reviews { get; set; }
         public virtual ICollection<MediaAttribute>? MediaAttributes { get; set; }
+        public virtual ICollection<ContinueWatching>? ContinueWatchings { get; set; }
 
         public Media()
         {

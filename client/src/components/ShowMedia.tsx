@@ -1,7 +1,7 @@
 import { useParams, useLocation } from "react-router-dom";
 import React, { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Media, Review, API_URL } from "../Data";
+import { Media, Review, API_URL, IContinueWatching } from "../Data";
 import { fetchMediaById, deleteMedia } from "../services/MediaService";
 import {
   isAdmin,
@@ -13,6 +13,11 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "../App.css";
 import VideoPlayer from "./VideoPlayer";
 import ImageDisplay from "./ImageDisplay";
+import {
+  addContinueWatching,
+  deleteContinueWatching,
+  fetchContinueWatchingById,
+} from "../services/ContinueWatchingService";
 
 const ShowMedia: React.FC<{ mediaId: string; season: number }> = ({
   mediaId,
@@ -140,7 +145,114 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
   const [nextEpisodeId, setNextEpisodeId] = useState<string | null>(null);
   const mediaKeys = ["ArrowRight", "ArrowLeft", " ", "f", "m"];
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [isPaused, setIsPaused] = useState(true);
 
+  const getContinueWatching = async (
+    mediaId: string,
+    episodeId: string | undefined
+  ): Promise<IContinueWatching> => {
+    try {
+      return await fetchContinueWatchingById(mediaId, episodeId);
+    } catch (error) {
+      console.error("Error fetching continue watching:", error);
+      return {} as IContinueWatching;
+    }
+  };
+
+  const setWatchedTime = async (
+    mediaId: string,
+    episodeId: string | undefined
+  ) => {
+    const cw = await getContinueWatching(mediaId, episodeId);
+    videoRef.current!.currentTime = cw.watchedTime ?? 0;
+  };
+
+  const updateContinueWatching = async (
+    mediaId: string,
+    episodeId: string | undefined
+  ) => {
+    if (videoRef.current) {
+      const video = videoRef.current;
+      const watchedTime = Math.floor(video.currentTime) || 0;
+      const duration = Math.floor(video.duration) || 0;
+      if (watchedTime > 0 && duration > 0) {
+        if (watchedTime >= duration - 90) {
+          deleteContinueWatching({ mediaId: mediaId, episodeId: episodeId });
+          if (nextEpisodeId) {
+            addContinueWatching({
+              mediaId: mediaId,
+              episodeId: nextEpisodeId,
+              watchedTime: 0,
+              duration: 10,
+            });
+          }
+        } else {
+          const continueWatching: Partial<IContinueWatching> = {
+            mediaId: mediaId,
+            episodeId: episodeId,
+            watchedTime: watchedTime,
+            duration: duration,
+          };
+          addContinueWatching(continueWatching);
+        }
+      }
+    }
+  };
+
+  // Setting watched time on load and handling pause/play events
+  useEffect(() => {
+    let mediaId = undefined;
+    let episodeId = undefined;
+    if (media.mediaType === "Movie") {
+      mediaId = media.id;
+    } else {
+      mediaId = media.series?.id;
+      episodeId = media.id;
+    }
+
+    setWatchedTime(mediaId, episodeId);
+
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handlePause = () => setIsPaused(true);
+    const handlePlay = () => setIsPaused(false);
+
+    video.addEventListener("pause", handlePause);
+    video.addEventListener("play", handlePlay);
+
+    return () => {
+      video.removeEventListener("pause", handlePause);
+      video.removeEventListener("play", handlePlay);
+    };
+  }, []);
+
+  // Periodically updating watched time
+  useEffect(() => {
+    let mediaId = undefined;
+    let episodeId = undefined;
+    if (media.mediaType === "Movie") {
+      mediaId = media.id;
+    } else {
+      mediaId = media.series?.id;
+      episodeId = media.id;
+    }
+
+    const delayedUpdate = setTimeout(() => {
+      updateContinueWatching(mediaId, episodeId);
+    }, 3000);
+
+    const periodicSetWatchProgress = setInterval(() => {
+      updateContinueWatching(mediaId, episodeId);
+    }, 45000);
+
+    return () => {
+      clearInterval(periodicSetWatchProgress);
+      clearTimeout(delayedUpdate);
+    };
+  }, [nextEpisodeId, isPaused]);
+
+  // Fetching other episodes of the series
   useEffect(() => {
     const getEpisodes = async () => {
       try {
@@ -161,24 +273,45 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
     }
   }, [media.series?.id]);
 
+  // Setting next and previous episode ids
   useEffect(() => {
     const currentSeasonEpisodes = episodes.filter(
       (ep) => ep.seasonNumber === media.seasonNumber
     );
 
-    setPrevEpisodeId(
-      currentSeasonEpisodes.find(
-        (ep) => ep.episodeNumber === (media.episodeNumber || 0) - 1
-      )?.id || null
+    const prevEpisode = currentSeasonEpisodes.find(
+      (ep) => ep.episodeNumber === media.episodeNumber - 1
     );
 
-    setNextEpisodeId(
-      currentSeasonEpisodes.find(
-        (ep) => ep.episodeNumber === (media.episodeNumber || 0) + 1
-      )?.id || null
+    if (!prevEpisode && media.seasonNumber > 1) {
+      const prevSeasonEpisodes = episodes.filter(
+        (ep) => ep.seasonNumber === media.seasonNumber - 1
+      );
+
+      const lastEpisodeOfPrevSeason = prevSeasonEpisodes.at(-1) || null;
+
+      setPrevEpisodeId(lastEpisodeOfPrevSeason?.id || null);
+    } else {
+      setPrevEpisodeId(prevEpisode?.id || null);
+    }
+
+    const nextEpisode = currentSeasonEpisodes.find(
+      (ep) => ep.episodeNumber === (media.episodeNumber || 0) + 1
     );
+
+    if (!nextEpisode && media.seasonNumber < (media.series?.seasons || 0)) {
+      const nextSeasonEpisode = episodes.find(
+        (ep) =>
+          ep.seasonNumber === media.seasonNumber + 1 && ep.episodeNumber === 1
+      );
+
+      setNextEpisodeId(nextSeasonEpisode?.id || null);
+    } else {
+      setNextEpisodeId(nextEpisode?.id || null);
+    }
   }, [episodes, media.seasonNumber, media.episodeNumber]);
 
+  // Handling keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const video = videoRef.current;
