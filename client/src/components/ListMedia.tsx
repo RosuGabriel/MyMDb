@@ -21,6 +21,7 @@ const ListMedia: React.FC = () => {
   );
   const [allMedia, setAllMedia] = useState<Media[]>([]);
   const [media, setMedia] = useState<Media[]>([]);
+  const [searchActive, setSearchActive] = useState(false);
 
   // Fetch media list
   useEffect(() => {
@@ -77,6 +78,9 @@ const ListMedia: React.FC = () => {
       filteredMedia = filteredMedia.filter((m) =>
         m.title.toLowerCase().includes(searchQuery.toLowerCase())
       );
+      setSearchActive(true);
+    } else {
+      setSearchActive(false);
     }
 
     setMedia(filteredMedia);
@@ -115,7 +119,7 @@ const ListMedia: React.FC = () => {
       </div>
 
       <div className="container-fluid">
-        <ContinueWatching />
+        {!searchActive && <ContinueWatching />}
         <div className="row d-flex">
           {media.map((m) => (
             <MediaItem key={m.id} media={m} defaultImage={defaultImage} />

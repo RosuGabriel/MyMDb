@@ -75,6 +75,7 @@ namespace MyMDb.Services
             }
 
             var continueWatchings = await _continueWatchingRepository.GetAllByUserIdAsync(userId);
+            continueWatchings = continueWatchings.OrderByDescending(cw => cw.DateModified).ToList();
             var episodes = continueWatchings
                             .Where(cw => cw.EpisodeId.HasValue && cw.Media is Series)
                             .Select(cw => new ContinueWatching
@@ -104,7 +105,7 @@ namespace MyMDb.Services
                         })
                         .ToList();
 
-            continueWatchings = episodes.Concat(movies).OrderByDescending(cw => cw.DateModified).ToList();
+            continueWatchings = episodes.Concat(movies).ToList();
             return continueWatchings;
         }
 

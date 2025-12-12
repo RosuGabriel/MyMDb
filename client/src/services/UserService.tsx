@@ -1,12 +1,6 @@
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
-import {
-  Creditentials,
-  apiClient,
-  setAxiosInterceptors,
-  UserProfile,
-  refreshApiClient,
-} from "../Data";
+import { Credentials, apiClient, UserProfile, refreshApiClient } from "../Data";
 
 export const register = async (email: string, password: string) => {
   const user = { email, password };
@@ -27,114 +21,118 @@ export const register = async (email: string, password: string) => {
   }
 };
 
+let lastStorage: "local" | "session" = "local";
+
+export const refreshAccessToken = async (): Promise<Credentials> => {
+  const credentials = getCredentials();
+  if (!credentials) throw new Error("No credentials found.");
+
+  try {
+    const response = await refreshApiClient.post("refresh", {
+      token: credentials.token,
+      refreshToken: credentials.refreshToken,
+    });
+
+    const newCreds = decodeToken(response.data.token);
+    newCreds.token = response.data.token;
+    newCreds.refreshToken = response.data.refreshToken;
+
+    if (lastStorage === "local") saveTokenLocal(newCreds);
+    else saveTokenSession(newCreds);
+
+    window.dispatchEvent(new Event("authChange"));
+    console.log("Access token refreshed.");
+    return newCreds;
+  } catch (error: any) {
+    if (!error.response) {
+      console.warn("Server offline!");
+      throw error;
+    }
+
+    if (error.response.status === 401 || error.response.status === 403) {
+      console.error(
+        "Something went wrong with your session. Please log in again.",
+        error.response.status
+      );
+      logout();
+      window.location.href = "/mymdb/login";
+      throw error;
+    }
+
+    console.error("Refresh failed!", error.response.status);
+    throw error;
+  }
+};
+
 export const login = async (
   email: string,
   password: string,
   remember: boolean
 ) => {
   try {
-    const response = await apiClient.post("user/login", {
-      email,
-      password,
-    });
-    const creditentials = decodeToken(response.data.token);
-    creditentials.token = response.data.token;
-    creditentials.refreshToken = response.data.refreshToken;
-    if (remember) {
-      saveTokenLocal(creditentials);
-    } else {
-      saveTokenSession(creditentials);
-    }
+    const response = await apiClient.post("user/login", { email, password });
+    const credentials = decodeToken(response.data.token);
+    credentials.token = response.data.token;
+    credentials.refreshToken = response.data.refreshToken;
+
+    lastStorage = remember ? "local" : "session";
+    if (remember) saveTokenLocal(credentials);
+    else saveTokenSession(credentials);
+
     window.dispatchEvent(new Event("authChange"));
-    console.log("User logged in:", creditentials);
-    setAxiosInterceptors();
+    console.log("User logged in:", credentials);
   } catch (error) {
     console.error("Error logging in user:", error);
     throw error;
   }
 };
 
-export const refreshAccessToken = async (): Promise<Creditentials> => {
-  while (localStorage.getItem("refreshing")) {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  }
-  localStorage.setItem("refreshing", "x");
-
-  const creditentials = getCreditentials();
-  if (!creditentials) {
-    throw new Error("No creditentials found.");
-  }
-
-  const token = creditentials.token;
-  const refreshToken = creditentials.refreshToken;
-
-  try {
-    const response = await refreshApiClient.post("refresh", {
-      token: token,
-      refreshToken: refreshToken,
-    });
-    const creditentials = decodeToken(response.data.token);
-    creditentials.token = response.data.token;
-    creditentials.refreshToken = response.data.refreshToken;
-    saveTokenLocal(creditentials);
-    window.dispatchEvent(new Event("authChange"));
-    localStorage.removeItem("refreshing");
-    return creditentials;
-  } catch (error) {
-    console.error("Error refreshing token:", error);
-    logout();
-    window.location.href = "/mymdb/login";
-    localStorage.removeItem("refreshing");
-    throw error;
-  }
-};
-
 export const logout = () => {
-  localStorage.removeItem("creditentials");
-  sessionStorage.removeItem("creditentials");
+  console.log("Logging out user.");
+  localStorage.removeItem("credentials");
+  sessionStorage.removeItem("credentials");
   window.dispatchEvent(new Event("authChange"));
   console.log("User logged out.");
-  setAxiosInterceptors();
 };
 
-const getCreditentials = (): Creditentials | null => {
-  let creditentials = localStorage.getItem("creditentials");
-  if (!creditentials) {
-    creditentials = sessionStorage.getItem("creditentials");
+export const getCredentials = (): Credentials | null => {
+  let credentials = localStorage.getItem("credentials");
+  if (!credentials) {
+    credentials = sessionStorage.getItem("credentials");
   }
-  if (!creditentials) {
+  if (!credentials) {
     return null;
   }
-  return JSON.parse(creditentials) as Creditentials;
+  return JSON.parse(credentials) as Credentials;
 };
 
 export const getLoggedUser = (): string | null => {
-  return getCreditentials()?.nameid!;
+  return getCredentials()?.nameid!;
 };
 
 export const isAuthenticated = (): boolean => {
-  if (getCreditentials() == null) {
+  if (getCredentials() == null) {
     return false;
   }
   return true;
 };
 
 export const isAdmin = (): boolean | null => {
-  const creditentials = getCreditentials();
-  return creditentials && creditentials.role.includes("admin");
+  const credentials = getCredentials();
+  return credentials && credentials.role.includes("admin");
 };
 
-const decodeToken = (token: string): Creditentials => {
+const decodeToken = (token: string): Credentials => {
   const decodedToken = jwtDecode(token);
-  return decodedToken as Creditentials;
+  return decodedToken as Credentials;
 };
 
-const saveTokenLocal = (creditentials: Creditentials) => {
-  localStorage.setItem("creditentials", JSON.stringify(creditentials));
+const saveTokenLocal = (credentials: Credentials) => {
+  localStorage.setItem("credentials", JSON.stringify(credentials));
 };
 
-const saveTokenSession = (creditentials: Creditentials) => {
-  sessionStorage.setItem("creditentials", JSON.stringify(creditentials));
+const saveTokenSession = (credentials: Credentials) => {
+  sessionStorage.setItem("credentials", JSON.stringify(credentials));
 };
 
 export const fetchProfile = async (): Promise<UserProfile> => {

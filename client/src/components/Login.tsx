@@ -20,10 +20,6 @@ const LoginForm: React.FC = () => {
 
     try {
       await login(email, password, remember);
-      console.log("User logged in.");
-      if (isAdmin()) {
-        console.log("User is admin.");
-      }
       navigate("/");
     } catch (error: any) {
       if (error.response?.data?.message) {
@@ -44,7 +40,7 @@ const LoginForm: React.FC = () => {
   };
 
   return (
-    <form className="login-form" onSubmit={handleSubmit}>
+    <form className="login-form p-3" onSubmit={handleSubmit}>
       <br />
       <div className="mb-3">
         <label htmlFor="email" className="form-label">

@@ -1,3 +1,61 @@
+// import { useEffect, useState } from "react";
+// import { staticClient } from "../Data";
+
+// const ImageDisplay: React.FC<{
+//   src: string;
+//   className?: string;
+//   alt?: string;
+//   backupImagePath?: string;
+//   style?: React.CSSProperties;
+// }> = ({ src: imagePath, className, alt, backupImagePath, style }) => {
+//   const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+//   useEffect(() => {
+//     let isMounted = true;
+
+//     const fetchAndSetImage = async () => {
+//       try {
+//         const response = await staticClient.get(imagePath, {
+//           responseType: "blob",
+//         });
+//         const imageObjectUrl = URL.createObjectURL(response.data);
+
+//         if (isMounted) {
+//           setImageUrl(imageObjectUrl);
+//         }
+//       } catch (error) {
+//         console.error("Could not download image:", error);
+//       }
+//     };
+
+//     fetchAndSetImage();
+
+//     return () => {
+//       isMounted = false;
+//       if (imageUrl) {
+//         URL.revokeObjectURL(imageUrl);
+//       }
+//     };
+//   }, [imagePath]);
+
+//   return (
+//     <div>
+//       {imageUrl ? (
+//         <img src={imageUrl} className={className} alt={alt} style={style} />
+//       ) : (
+//         <img
+//           src={backupImagePath}
+//           className={className}
+//           alt={alt}
+//           style={style}
+//         />
+//       )}
+//     </div>
+//   );
+// };
+
+// export default ImageDisplay;
+
 import { useEffect, useState } from "react";
 import { staticClient } from "../Data";
 
@@ -8,47 +66,74 @@ const ImageDisplay: React.FC<{
   backupImagePath?: string;
   style?: React.CSSProperties;
 }> = ({ src: imagePath, className, alt, backupImagePath, style }) => {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [currentSrc, setCurrentSrc] = useState<string | null>(null);
+  const [showTextOverlay, setShowTextOverlay] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
 
-    const fetchAndSetImage = async () => {
+    const fetchImage = async () => {
       try {
         const response = await staticClient.get(imagePath, {
           responseType: "blob",
         });
-        const imageObjectUrl = URL.createObjectURL(response.data);
-
+        const objectUrl = URL.createObjectURL(response.data);
         if (isMounted) {
-          setImageUrl(imageObjectUrl);
+          setCurrentSrc(objectUrl);
+          setShowTextOverlay(false);
         }
       } catch (error) {
         console.error("Could not download image:", error);
+        if (isMounted) {
+          setCurrentSrc(backupImagePath || null);
+          setShowTextOverlay(true);
+        }
       }
     };
 
-    fetchAndSetImage();
+    fetchImage();
 
     return () => {
       isMounted = false;
-      if (imageUrl) {
-        URL.revokeObjectURL(imageUrl);
-      }
+      if (currentSrc) URL.revokeObjectURL(currentSrc);
     };
-  }, [imagePath]);
+  }, [imagePath, backupImagePath]);
+
+  if (!currentSrc) return null;
 
   return (
-    <div>
-      {imageUrl ? (
-        <img src={imageUrl} className={className} alt={alt} style={style} />
-      ) : (
-        <img
-          src={backupImagePath}
-          className={className}
-          alt={alt}
-          style={style}
-        />
+    <div
+      className={className}
+      style={{
+        ...style,
+        position: "relative",
+        display: "inline-block",
+        textAlign: "center",
+      }}
+    >
+      <img
+        src={currentSrc}
+        alt={alt}
+        style={{
+          display: "block",
+          width: "100%",
+          height: "auto",
+          opacity: showTextOverlay ? 0.5 : 1,
+        }}
+      />
+      {showTextOverlay && (
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            fontWeight: "bold",
+            color: "#fff",
+          }}
+        >
+          {alt || "Image not available"}
+        </div>
       )}
     </div>
   );

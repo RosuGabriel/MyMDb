@@ -1,5 +1,7 @@
 import axios, { AxiosInstance } from "axios";
-import { refreshAccessToken } from "./services/UserService";
+import { refreshAccessToken, getCredentials } from "./services/UserService";
+
+// API Clients
 
 export const API_URL = import.meta.env.VITE_API_URL;
 
@@ -15,70 +17,57 @@ export let staticClient: AxiosInstance = axios.create({
   baseURL: API_URL + "static/",
 });
 
+let refreshingPromise: Promise<any> | null = null;
+
 export const setAxiosInterceptors = () => {
-  // request interceptor
-  apiClient.interceptors.request.use(
-    async (config) => {
-      const creditentialsString =
-        localStorage.getItem("creditentials") ||
-        sessionStorage.getItem("creditentials");
-      if (creditentialsString) {
-        const creditentials: Creditentials = JSON.parse(creditentialsString);
+  // Prevent multiple interceptor setups
+  if ((apiClient as any)._interceptorsSet) return;
+  (apiClient as any)._interceptorsSet = true;
+  (staticClient as any)._interceptorsSet = true;
 
-        const currentTime = Math.floor(Date.now() / 1000);
-        if (creditentials.exp < currentTime + 600) {
-          const newCredentials = await refreshAccessToken();
-          config.headers.Authorization = `Bearer ${newCredentials.token}`;
-        } else {
-          config.headers.Authorization = `Bearer ${creditentials.token}`;
-        }
+  const attachAuthHeader = async (config: any, bufferTime = 300) => {
+    const credentials = getCredentials();
+    if (!credentials) return config;
+
+    const currentTime = Math.floor(Date.now() / 1000);
+    if (credentials.exp < currentTime + bufferTime) {
+      // Wait if a refresh is already in progress
+      if (!refreshingPromise) {
+        refreshingPromise = refreshAccessToken();
       }
-      return config;
-    },
-    (error) => {
-      return Promise.reject(error);
+      const newCreds = await refreshingPromise;
+      refreshingPromise = null;
+      config.headers.Authorization = `Bearer ${newCreds.token}`;
+    } else {
+      config.headers.Authorization = `Bearer ${credentials.token}`;
     }
+    return config;
+  };
+
+  // Request interceptors
+  apiClient.interceptors.request.use((config) => attachAuthHeader(config, 300));
+  staticClient.interceptors.request.use((config) =>
+    attachAuthHeader(config, 100)
   );
 
-  staticClient.interceptors.request.use(
-    async (config) => {
-      const creditentialsString =
-        localStorage.getItem("creditentials") ||
-        sessionStorage.getItem("creditentials");
-      if (creditentialsString) {
-        const creditentials: Creditentials = JSON.parse(creditentialsString);
-
-        const currentTime = Math.floor(Date.now() / 1000);
-        if (creditentials.exp < currentTime + 500) {
-          const newCredentials = await refreshAccessToken();
-          config.headers.Authorization = `Bearer ${newCredentials.token}`;
-        } else {
-          config.headers.Authorization = `Bearer ${creditentials.token}`;
-        }
-      }
-      return config;
-    },
-    (error) => {
-      return Promise.reject(error);
-    }
-  );
-
-  // response interceptor
+  // Response interceptors
   apiClient.interceptors.response.use(
     (response) => response,
     async (error) => {
       const originalRequest = error.config;
-      // let newCredentials;
-      if (error.response.status === 401) {
-        // Unauthorized
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        originalRequest._retry = true;
+
         try {
-          const newCredentials = await refreshAccessToken();
-          originalRequest.headers[
-            "Authorization"
-          ] = `Bearer ${newCredentials?.token}`;
+          if (!refreshingPromise) refreshingPromise = refreshAccessToken();
+          const newCreds = await refreshingPromise;
+          refreshingPromise = null;
+          originalRequest.headers["Authorization"] = `Bearer ${newCreds.token}`;
           return apiClient(originalRequest);
-        } catch (refreshError) {
-          console.error("Failed to refresh access token:", refreshError);
+        } catch (err) {
+          refreshingPromise = null;
+          // Token refresh failed, logout
+          return Promise.reject(err);
         }
       }
       return Promise.reject(error);
@@ -87,6 +76,8 @@ export const setAxiosInterceptors = () => {
 };
 
 setAxiosInterceptors();
+
+// Data Interfaces
 
 export interface Media {
   id: string;
@@ -119,7 +110,7 @@ export interface Review {
   comment: string;
 }
 
-export interface Creditentials {
+export interface Credentials {
   nameid: string;
   email: string;
   role: string;

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { CreateMedia, AddEpisode } from "./components/CreateMedia";
+import OfflinePage from "./components/OfflinePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ListMedia from "./components/ListMedia";
 import AddReview from "./components/AddReview";
@@ -34,6 +35,29 @@ const App: React.FC = () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  const [offlineType, setOfflineType] = useState<
+    null | "no-internet" | "server-down"
+  >(null);
+
+  useEffect(() => {
+    if (!navigator.onLine) {
+      setOfflineType("no-internet");
+      return;
+    }
+
+    fetch("/api/health", { method: "HEAD" })
+      .then((res) => {
+        if (!res.ok && res.status !== 404 && res.status !== 401) {
+          setOfflineType("server-down");
+        }
+      })
+      .catch(() => setOfflineType("server-down"));
+  }, []);
+
+  if (offlineType) {
+    return <OfflinePage type={offlineType} />;
+  }
 
   return (
     <div className="App">

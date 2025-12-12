@@ -33,3 +33,8 @@ body,
 .media-card-img {
   aspect-ratio: 2/3;
 }
+
+.no-focus-outline:focus {
+  outline: none;
+  box-shadow: none;
+}

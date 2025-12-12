@@ -27,6 +27,8 @@ const ContinueWatchingItem: React.FC<{
         <div className="position-relative">
           <ImageDisplay
             src={cw.posterPath}
+            // Temporary use path to extract alt text
+            alt={cw.posterPath.split("/").pop()?.split(".")[0]}
             className="card-img-top media-card-img rounded"
             backupImagePath="/film.png"
           />

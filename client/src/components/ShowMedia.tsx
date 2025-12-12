@@ -368,7 +368,7 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
               ref={videoRef}
               src={`${API_URL}static/${media.videoPath}`}
               controls
-              className="w-100 rounded"
+              className="w-100 rounded no-focus-outline"
             >
               {attributes
                 .filter((attr) => attr.type.toLowerCase() === "subtitle")
@@ -382,11 +382,6 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
                   />
                 ))}
             </video>
-            {/* <VideoPlayer
-              ref={videoRef}
-              src={media.videoPath}
-              attributes={attributes}
-            /> */}
           </div>
         </div>
       )}
