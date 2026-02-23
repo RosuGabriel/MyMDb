@@ -27,12 +27,11 @@ const ContinueWatchingItem: React.FC<{
         <div className="position-relative">
           <ImageDisplay
             src={cw.posterPath}
-            // Temporary use path to extract alt text
             alt={cw.posterPath.split("/").pop()?.split(".")[0]}
             className="card-img-top media-card-img rounded"
             backupImagePath="/film.png"
           />
-          <div className="position-absolute bottom-0 bg-dark text-white w-100 p-0 m-0 opacity-75">
+          <div className="position-absolute bottom-0 bg-dark text-white w-100 pb-1 mb-1 opacity-75 rounded-bottom">
             {cw.episodeId && (
               <p className="m-0 p-0">
                 S{cw.seasonNumber}-E{cw.episodeNumber}
@@ -58,7 +57,7 @@ const ContinueWatchingItem: React.FC<{
       </a>
 
       <button
-        className="media-card btn btn-dark text-warning m-1 p-0 border-0"
+        className="media-card btn btn-dark text-danger m-1 p-0 border-0"
         type="button"
         onClick={handleDelete}
       >

@@ -59,6 +59,7 @@ function Navbar() {
       searchParams.delete("search");
     }
     navigate({ pathname: "/mymdb/media", search: searchParams.toString() });
+    setIsCollapsed(true);
   };
 
   return (
@@ -66,7 +67,7 @@ function Navbar() {
       <div className="container-fluid d-flex align-items-center">
         <a
           id="app-logo"
-          className="navbar-brand bg-warning px-2 rounded text-dark"
+          className="navbar-brand px-0 rounded text-dark"
           href="/"
           style={{
             fontWeight: "900",
@@ -76,7 +77,7 @@ function Navbar() {
                 : "0px",
           }}
         >
-          MyMDb
+          <img src="/logo.png" alt="RedPanda Logo" style={{ height: "40px" }} />
         </a>
         {/* "154.77px" */}
         <button

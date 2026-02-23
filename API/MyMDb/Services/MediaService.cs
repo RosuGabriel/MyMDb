@@ -9,13 +9,15 @@ namespace MyMDb.Services
     {
         private readonly IMediaRepository _MediaRepository;
         private readonly IMediaAttributeRepository _MediaAttributeRepository;
+        private readonly IContinueWatchingService _ContinueWatchingService;
         private readonly IConfiguration _configuration;
 
-        public MediaService(IMediaRepository MediaRepository, IConfiguration configuration, IMediaAttributeRepository mediaAttributeRepository)
+        public MediaService(IMediaRepository MediaRepository, IConfiguration configuration, IMediaAttributeRepository mediaAttributeRepository, IContinueWatchingService continueWatchingService)
         {
             _MediaRepository = MediaRepository;
             _configuration = configuration;
             _MediaAttributeRepository = mediaAttributeRepository;
+            _ContinueWatchingService = continueWatchingService;
         }
 
         // getting
@@ -167,7 +169,7 @@ namespace MyMDb.Services
                 return false;
             }
 
-            // sterge poster si video odata cu movie
+            // delete poster and video files from storage
             if (mediaToDelete.PosterPath != null && System.IO.File.Exists(Path.Combine(_configuration["Paths:Root"]!, mediaToDelete.PosterPath)))
             {
                 System.IO.File.Delete(Path.Combine(_configuration["Paths:Root"]!, mediaToDelete.PosterPath));
@@ -177,6 +179,8 @@ namespace MyMDb.Services
             {
                 System.IO.File.Delete(Path.Combine(_configuration["Paths:Root"]!, mediaToDelete.VideoPath));
             }
+
+            // code for delete continue watching entries here
 
             await _MediaRepository.DeleteAsync(mediaToDelete);
 

@@ -11,28 +11,28 @@
   },
   "dependencies": {
     "@types/video.js": "^7.3.58",
-    "axios": "^1.7.4",
-    "bootstrap": "^5.3.3",
-    "hls.js": "^1.5.20",
+    "axios": "^1.13.5",
+    "bootstrap": "^5.3.8",
+    "hls.js": "^1.6.15",
     "jwt-decode": "^4.0.0",
-    "latest": "^0.2.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.24.1",
-    "video.js": "^4.12.15"
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-loading-skeleton": "^3.5.0",
+    "react-router-dom": "^7.13.0",
+    "video.js": "^8.23.7"
   },
   "devDependencies": {
-    "@types/hls.js": "^0.13.3",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "@typescript-eslint/eslint-plugin": "^8.25.0",
-    "@typescript-eslint/parser": "^8.25.0",
-    "@vitejs/plugin-react": "^4.3.1",
-    "eslint": "^8.57.1",
-    "eslint-plugin-react-hooks": "^4.6.2",
-    "eslint-plugin-react-refresh": "^0.4.7",
-    "typescript": "^5.2.2",
-    "vite": "^6.2.0",
-    "vite-plugin-pwa": "^1.0.3"
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.56.0",
+    "@typescript-eslint/parser": "^8.56.0",
+    "@vitejs/plugin-react": "^5.1.4",
+    "baseline-browser-mapping": "^2.10.0",
+    "eslint": "^9.39.3",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vite-plugin-pwa": "^1.2.0"
   }
 }

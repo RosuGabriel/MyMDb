@@ -66,6 +66,11 @@ namespace MyMDb.Services
             return;
         }
 
+        public async Task DeleteForAllUsersByMediaIdAsync(Guid mediaId)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<ICollection<ContinueWatching>> GetAllByUserIdAsync(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);

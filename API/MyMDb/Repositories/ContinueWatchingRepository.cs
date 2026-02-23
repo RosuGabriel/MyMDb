@@ -12,6 +12,21 @@ namespace MyMDb.Repositories
 
         }
 
+        public Task DeleteEpisodeCWForAllUsersAsync(Guid mediaId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task DeleteMovieCWForAllUsersAsync(Guid mediaId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task DeleteSeriesCWForAllUsersAsync(Guid mediaId)
+        {
+            throw new NotImplementedException();
+        }
+
         // For episodes of the same series, only the latest watched episode is shown in the Continue Watching list
         public async Task<ICollection<ContinueWatching>> GetAllByUserIdAsync(string userId)
         {

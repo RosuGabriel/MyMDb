@@ -24,10 +24,24 @@ const ContinueWatching: React.FC = () => {
   return (
     <>
       {watchingItems.length > 0 && (
-        <div className="bg-dark p-1 rounded mb-4 border border-warning border-3">
-          <h2 className="text-secondary mb-1">Continue Watching</h2>
+        <div className="bg-dark mb-4 gradient-border-3 position-relative pt-4 px-3 pb-3 rounded">
+          <h2
+            className="h2-bg fw-bold position-absolute orange-border-3 rounded"
+            style={{
+              top: "-15px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              backgroundColor: "#212529",
+              padding: "0 15px",
+              fontSize: "1.3rem",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span className="gradient-text">Continue Watching</span>
+          </h2>
+
           <div
-            className="d-flex overflow-auto"
+            className="d-flex overflow-auto pt-2"
             style={{
               gap: "12px",
               whiteSpace: "nowrap",
