@@ -13,8 +13,8 @@ The site features an intuitive and user-friendly interface, providing easy navig
 - **Library Section**: Displays a triple button for filtering media types, with results listed responsively based on screen dimensions.
 
 <p float="left">
-    <img alt="Desktop Site" src="images/desktopSite.jpg" width="77.8%"/>
-    <img alt="Mobile Site" src="images/mobileSite.jpg" width="21.6%"/>
+    <img alt="Desktop Site" src="images/desktopSite.jpg" width="80%"/>
+    <img alt="Mobile Site" src="images/mobileSite.jpg" width="17.5%"/>
 </p>
 
 ---
