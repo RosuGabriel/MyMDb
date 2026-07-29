@@ -2,19 +2,22 @@ import axios, { AxiosInstance } from "axios";
 import { refreshAccessToken, getCredentials } from "./services/UserService";
 
 // API Clients
-
-export const API_URL = import.meta.env.VITE_API_URL;
+// Use relative URL to work with both Vite proxy (dev) and nginx (prod)
+export const API_URL = import.meta.env.VITE_API_URL || "/mymdb/";
 
 export let refreshApiClient: AxiosInstance = axios.create({
   baseURL: API_URL + "api/user/",
+  withCredentials: true,
 });
 
 export let apiClient: AxiosInstance = axios.create({
   baseURL: API_URL + "api/",
+  withCredentials: true,
 });
 
 export let staticClient: AxiosInstance = axios.create({
   baseURL: API_URL + "static/",
+  withCredentials: true,
 });
 
 let refreshingPromise: Promise<any> | null = null;
@@ -47,7 +50,7 @@ export const setAxiosInterceptors = () => {
   // Request interceptors
   apiClient.interceptors.request.use((config) => attachAuthHeader(config, 300));
   staticClient.interceptors.request.use((config) =>
-    attachAuthHeader(config, 100)
+    attachAuthHeader(config, 100),
   );
 
   // Response interceptors
@@ -71,7 +74,7 @@ export const setAxiosInterceptors = () => {
         }
       }
       return Promise.reject(error);
-    }
+    },
   );
 };
 
@@ -86,7 +89,7 @@ export interface Media {
   title: string;
   description: string;
   mediaType: "Movie" | "Series" | "Episode";
-  releaseDate?: Date;
+  releaseDate?: Date | string;
   posterPath: string;
   videoPath: string;
   episodeNumber: number;
@@ -105,7 +108,7 @@ export interface Review {
   userId: string;
   mediaId: string;
   createDate: Date;
-  modifiedDate: Date;
+  dateModified: Date;
   rating: number;
   comment: string;
 }
@@ -123,6 +126,15 @@ export interface UserProfile {
   userId: string;
   userName: string;
   profilePicPath: string;
+}
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  userName: string;
+  profilePicPath: string;
+  approved: boolean;
+  roles: string[];
 }
 
 export interface Attribute {
@@ -147,5 +159,7 @@ export interface IContinueWatching {
   duration: number;
   episodeNumber: number;
   seasonNumber: number;
-  posterPath: string;
+  posterPath: string | null;
+  title: string;
+  dateModified: Date;
 }

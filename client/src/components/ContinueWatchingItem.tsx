@@ -9,12 +9,19 @@ const ContinueWatchingItem: React.FC<{
   cw: IContinueWatching;
   defaultImage: string;
   onDelete: (id: string) => void;
-}> = ({ cw, onDelete }) => {
+}> = ({ cw, defaultImage, onDelete }) => {
   function handleDelete() {
-    console.log("Delete media with id: ", cw.mediaId, "from continue watching");
+    console.log(
+      "Deleted media with id: ",
+      cw.mediaId,
+      "from continue watching",
+    );
     deleteContinueWatching(cw);
     onDelete(cw.mediaId);
   }
+
+  const progress =
+    cw.duration > 0 ? Math.min((cw.watchedTime / cw.duration) * 100, 100) : 0;
 
   return (
     <div className="media-card d-flex flex-column overflow-hidden my-1 rounded col-5 col-sm-4 col-md-4 col-lg-3 col-xl-2 text-decoration-none">
@@ -22,16 +29,16 @@ const ContinueWatchingItem: React.FC<{
         href={
           "/mymdb/media/" + (cw.episodeId !== null ? cw.episodeId : cw.mediaId)
         }
-        className="card media-card btn btn-dark text-secondary h-100 p-1"
+        className="card media-card btn btn-dark text-secondary p-1 border-0 text-decoration-none"
       >
         <div className="position-relative">
           <ImageDisplay
             src={cw.posterPath}
-            alt={cw.posterPath.split("/").pop()?.split(".")[0]}
+            alt={cw.title}
             className="card-img-top media-card-img rounded"
-            backupImagePath="/film.png"
+            backupImagePath={defaultImage}
           />
-          <div className="position-absolute bottom-0 bg-dark text-white w-100 pb-1 mb-1 opacity-75 rounded-bottom">
+          <div className="position-absolute bottom-0 bg-dark text-white w-100 p-0 mb-0 opacity-75 rounded-bottom">
             {cw.episodeId && (
               <p className="m-0 p-0">
                 S{cw.seasonNumber}-E{cw.episodeNumber}
@@ -47,7 +54,7 @@ const ContinueWatchingItem: React.FC<{
                 aria-valuenow={cw.watchedTime}
                 aria-valuemin={0}
                 aria-valuemax={cw.duration}
-                style={{ width: `${(cw.watchedTime / cw.duration) * 100}%` }}
+                style={{ width: `${progress}%` }}
               >
                 &nbsp;
               </div>

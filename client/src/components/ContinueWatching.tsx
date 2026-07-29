@@ -11,6 +11,12 @@ const ContinueWatching: React.FC = () => {
   useEffect(() => {
     const fetchCWList = async () => {
       let fetchedCW: IContinueWatching[] = await fetchContinueWatching();
+      fetchedCW.sort((a, b) => {
+        return (
+          new Date(b.dateModified).getTime() -
+          new Date(a.dateModified).getTime()
+        );
+      });
       setWatchingItems(fetchedCW);
     };
 
@@ -24,7 +30,7 @@ const ContinueWatching: React.FC = () => {
   return (
     <>
       {watchingItems.length > 0 && (
-        <div className="bg-dark mb-4 gradient-border-3 position-relative pt-4 px-3 pb-3 rounded">
+        <div className="bg-dark gradient-border-3 position-relative mb-4 pt-4 px-3 pb-3 rounded">
           <h2
             className="h2-bg fw-bold position-absolute orange-border-3 rounded"
             style={{

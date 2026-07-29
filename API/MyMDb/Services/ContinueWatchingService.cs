@@ -41,14 +41,12 @@ namespace MyMDb.Services
                 continueWatching.Initialize();
                 return await _continueWatchingRepository.AddAsync(continueWatching);
             }
-            else
-            {
-                continueWatching.WatchedTime = secondsWatched;
-                continueWatching.Duration = duration;
 
-                continueWatching.UpdateDateModified();
-                await _continueWatchingRepository.UpdateAsync(continueWatching);
-            }
+            continueWatching.WatchedTime = secondsWatched;
+            continueWatching.Duration = duration;
+
+            continueWatching.UpdateDateModified();
+            await _continueWatchingRepository.UpdateAsync(continueWatching);
 
             return null;
         }
@@ -62,13 +60,13 @@ namespace MyMDb.Services
             }
 
             await _continueWatchingRepository.DeleteAsync(continueWatching);
-            
+
             return;
         }
 
         public async Task DeleteForAllUsersByMediaIdAsync(Guid mediaId)
         {
-            throw new NotImplementedException();
+            await _continueWatchingRepository.DeleteMovieCWForAllUsersAsync(mediaId);
         }
 
         public async Task<ICollection<ContinueWatching>> GetAllByUserIdAsync(string userId)
@@ -94,7 +92,8 @@ namespace MyMDb.Services
                                                 .FirstOrDefault(e => e.Id == cw.EpisodeId)?.EpisodeNumber,
                                 SeasonNumber = (cw.Media as Series)!.Episodes!
                                                 .FirstOrDefault(e => e.Id == cw.EpisodeId)?.SeasonNumber,
-                                PosterPath = cw.Media?.PosterPath
+                                PosterPath = cw.Media?.PosterPath,
+                                Title = cw.Media?.Title
                             })
                             .ToList();
 
@@ -106,7 +105,8 @@ namespace MyMDb.Services
                             WatchedTime = cw.WatchedTime,
                             Duration = cw.Duration,
                             Media = cw.Media,
-                            PosterPath = cw.Media?.PosterPath
+                            PosterPath = cw.Media?.PosterPath,
+                            Title = cw.Media?.Title
                         })
                         .ToList();
 

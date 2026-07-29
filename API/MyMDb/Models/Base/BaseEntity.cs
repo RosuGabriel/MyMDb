@@ -13,7 +13,6 @@ namespace MyMDb.Models.Base
 
         public DateTime? DateModified { get; set; }
 
-        // Metodă care actualizează DateModified la fiecare modificare
         public virtual void UpdateDateModified()
         {
             DateModified = DateTime.Now;

@@ -1,4 +1,5 @@
-﻿using MyMDb.Models;
+﻿using MyMDb.DTOs;
+using MyMDb.Models;
 
 namespace MyMDb.ServiceInterfaces
 {
@@ -17,15 +18,17 @@ namespace MyMDb.ServiceInterfaces
         Task<Episode?> GetEpisodeById(Guid id);
 
         // adding
-        Task<Movie> AddMovie(Movie movie);
-        Task<Series> AddSeries(Series series);
-        Task<Episode> AddEpisode(Episode episode);
+        Task<MovieDto> AddMovie(MovieDto movieDto, IFormFile? poster, IFormFile? video);
+        Task<MovieDto> AddMovieStreamed(MovieDto movieDto, string? posterTempPath, string? videoFinalPath);
+        Task<SeriesDto> AddSeries(SeriesDto seriesDto, IFormFile? poster);
+        Task<EpisodeDto> AddEpisode(EpisodeDto episodeDto, IFormFile? poster, IFormFile? video);
+        Task<EpisodeDto> AddEpisodeStreamed(EpisodeDto episodeDto, string? posterTempPath, string? videoFinalPath);
         Task<ICollection<Episode>> AddManyEpisodesToASeries(Guid seriesId, int seasonNumber, int episodesNumber, string? posterPath);
 
         // editing
-        Task<Movie?> EditMovie(Guid id, Movie editedMovie);
-        Task<Series?> EditSeries(Guid id, Series editedSeries);
-        Task<Episode?> EditEpisode(Guid id, Episode editedEpisode);
+        Task<MovieDto?> EditMovie(Guid id, MovieDto editedMovieDto, IFormFile? poster, IFormFile? video);
+        Task<SeriesDto?> EditSeries(Guid id, SeriesDto editedSeriesDto, IFormFile? poster);
+        Task<EpisodeDto?> EditEpisode(Guid id, EpisodeDto editedEpisodeDto, IFormFile? poster, IFormFile? video);
 
         // delete
         Task<bool> DeleteMedia(Guid id);
@@ -33,6 +36,11 @@ namespace MyMDb.ServiceInterfaces
         // others
         public Task NormalizeVideo(string videoPath);
         Task<MediaAttribute> AddAttribute(MediaAttribute mediaAttribute);
+        Task<MediaAttribute?> UpdateAttribute(MediaAttribute mediaAttribute, IFormFile? file);
+        Task<bool> DeleteAttribute(Guid mediaId, string attributeType, string language);
         public string SanitizeFileName(string fileName);
+
+        // streaming
+        Task<VideoStreamInfoDto> GetVideoStreamInfoAsync(Guid mediaId);
     }
 }

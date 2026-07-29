@@ -17,5 +17,7 @@ namespace MyMDb.Models
         public virtual int? SeasonNumber { get; set; }
         [NotMapped]
         public virtual string? PosterPath { get; set; }
+        [NotMapped]
+        public virtual string? Title { get; set; }
     }
 }

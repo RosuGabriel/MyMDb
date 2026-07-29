@@ -19,9 +19,6 @@ const MediaItem: React.FC<{ media: Media; defaultImage: string }> = ({
           alt={media.title}
           backupImagePath="/film.png"
         />
-        {/* <div className="card-body d-flex justify-content-center align-items-center flex-grow-1">
-          <h5 className="card-title m-0 text-center">{media.title}</h5>
-        </div> */}
       </div>
     </a>
   );

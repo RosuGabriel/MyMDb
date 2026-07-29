@@ -12,19 +12,43 @@ namespace MyMDb.Repositories
 
         }
 
-        public Task DeleteEpisodeCWForAllUsersAsync(Guid mediaId)
+        public async Task DeleteEpisodeCWForAllUsersAsync(Guid mediaId)
         {
-            throw new NotImplementedException();
+            var episodeCWRecords = await _dbSet
+                .Where(cw => cw.EpisodeId == mediaId)
+                .ToListAsync();
+
+            if (episodeCWRecords.Any())
+            {
+                _dbSet.RemoveRange(episodeCWRecords);
+                await SaveChangesAsync();
+            }
         }
 
-        public Task DeleteMovieCWForAllUsersAsync(Guid mediaId)
+        public async Task DeleteMovieCWForAllUsersAsync(Guid mediaId)
         {
-            throw new NotImplementedException();
+            var movieCWRecords = await _dbSet
+                .Where(cw => cw.MediaId == mediaId)
+                .ToListAsync();
+
+            if (movieCWRecords.Any())
+            {
+                _dbSet.RemoveRange(movieCWRecords);
+                await SaveChangesAsync();
+            }
         }
 
-        public Task DeleteSeriesCWForAllUsersAsync(Guid mediaId)
+        public async Task DeleteSeriesCWForAllUsersAsync(Guid mediaId)
         {
-            throw new NotImplementedException();
+            var seriesCWRecords = await _dbSet
+                .Where(cw => cw.MediaId == mediaId)
+                .ToListAsync();
+
+            if (seriesCWRecords.Any())
+            {
+                _dbSet.RemoveRange(seriesCWRecords);
+                await SaveChangesAsync();
+            }
         }
 
         // For episodes of the same series, only the latest watched episode is shown in the Continue Watching list
@@ -47,7 +71,7 @@ namespace MyMDb.Repositories
             }
             return continueWatchings;
         }
-        
+
         public async Task<ContinueWatching?> GetByUserIdAndMediaIdAsync(string userId, Guid? mediaId, Guid? episodeId)
         {
             return await _context.ContinueWatchings

@@ -14,6 +14,6 @@ namespace MyMDb.Models
         public virtual UserProfile? UserProfile { get; set; }
         [Required]
         public Guid? MediaId { get; set; }
-        public virtual Media? Media { get;}
+        public virtual Media? Media { get; set; }
     }
 }

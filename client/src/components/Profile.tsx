@@ -44,7 +44,7 @@ const Profile: React.FC = () => {
         formData.append("ProfilePic", newProfilePic);
         formData.append(
           "ProfilePicPath",
-          profile.userId + "." + getFileExtension(newProfilePic?.name || "")
+          profile.userId + "." + getFileExtension(newProfilePic?.name || ""),
         );
       }
 
@@ -55,7 +55,7 @@ const Profile: React.FC = () => {
   };
 
   const handleProfilePicChange = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     if (event.target.files && event.target.files[0]) {
       setNewProfilePic(event.target.files[0]);
@@ -77,7 +77,7 @@ const Profile: React.FC = () => {
             src={profile.profilePicPath}
             backupImagePath="/profilePic.jpg"
             alt="Avatar"
-            className="rounded-circle mb-3"
+            className="rounded-circle mb-3 d-block mx-auto"
             style={{ width: "150px", height: "150px", objectFit: "cover" }}
           />
           {/* <img

@@ -398,9 +398,6 @@ FodyWeavers.xsd
 # Root Directory
 wwwroot/
 
-# Migrations Directory
-Migrations/
-
 # Configuration files
 appsettings*
 *appsettings*
@@ -413,3 +410,5 @@ dist/
 # Docker Files
 *.tar
 *.tsbuildinfo
+docker-compose.*.yml
+db_data/

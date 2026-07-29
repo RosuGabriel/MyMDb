@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { staticClient } from "../Data";
 
 const ImageDisplay: React.FC<{
-  src: string;
+  src: string | null | undefined;
   className?: string;
   alt?: string;
   backupImagePath?: string;
@@ -15,6 +15,15 @@ const ImageDisplay: React.FC<{
     let isMounted = true;
 
     const fetchImage = async () => {
+      // Skip fetch if no image path provided
+      if (!imagePath) {
+        if (isMounted) {
+          setCurrentSrc(backupImagePath || null);
+          setShowTextOverlay(true);
+        }
+        return;
+      }
+
       try {
         const response = await staticClient.get(imagePath, {
           responseType: "blob",
@@ -49,7 +58,7 @@ const ImageDisplay: React.FC<{
       style={{
         ...style,
         position: "relative",
-        display: "inline-block",
+        display: "block",
         textAlign: "center",
         overflow: "hidden",
       }}

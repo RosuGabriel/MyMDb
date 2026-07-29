@@ -1,0 +1,59 @@
+services:
+  api:
+    build:
+      context: ./API/MyMDb
+      dockerfile: Dockerfile
+    user: "${HOST_USER_ID}:${HOST_GROUP_ID}"
+    container_name: mymdb-api
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT_TYPE}
+      - ASPNETCORE_URLS=http://+:5000
+    volumes:
+      - ${APPSETTINGS_PATH}:/app/appsettings.json
+      - ${WWWROOT_PATH}:/app/wwwroot
+    networks:
+      - mymdb-network
+    restart: ${RESTART_POLICY}
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /mymdb/
+    container_name: mymdb-client
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    networks:
+      - mymdb-network
+    restart: ${RESTART_POLICY}
+
+  database:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mymdb-database
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=${SA_PASSWORD}
+    networks:
+      - mymdb-network
+    healthcheck:
+      test: [ "CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$SA_PASSWORD\" -C -Q 'SELECT 1' -b -o /dev/null || exit 1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 45s
+    volumes:
+      - mymdb-dbdata:/var/opt/mssql
+    restart: ${RESTART_POLICY}
+
+networks:
+  mymdb-network:
+    driver: bridge
+
+volumes:
+  mymdb-dbdata:

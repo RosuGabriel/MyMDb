@@ -1,10 +1,10 @@
 {
     "compilerOptions": {
-      "target": "es5",
-      "lib": ["dom", "ESNext"],
+      "target": "es2022",
+      "lib": ["dom", "ES2022"],
       "jsx": "react-jsx",
       "module": "ESNext",
-      "moduleResolution": "node",
+      "moduleResolution": "bundler",
       "strict": true,
       "esModuleInterop": true,
       "skipLibCheck": true,

@@ -129,6 +129,10 @@ body,
   z-index: 1;
 }
 
+.card-bg {
+  background-color: #212529;
+}
+
 .gradient-text {
   display: inline-block;
   background: linear-gradient(90deg, #9b1126, #bb6029);

@@ -1,6 +1,6 @@
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
-import { Credentials, apiClient, UserProfile, refreshApiClient } from "../Data";
+import { Credentials, apiClient, UserProfile, refreshApiClient, AdminUser } from "../Data";
 
 export const register = async (email: string, password: string) => {
   const user = { email, password };
@@ -151,6 +151,54 @@ export const updateProfile = async (formData: FormData) => {
     return response.data;
   } catch (error) {
     console.error("Error updating user profile:", error);
+    throw error;
+  }
+};
+
+// Admin user management
+
+export const fetchAllUsers = async (): Promise<AdminUser[]> => {
+  try {
+    const response = await apiClient.get<AdminUser[] | { $values: AdminUser[] }>("user/users");
+    // Handle ASP.NET reference loop format ($id/$values)
+    const data = response.data;
+    if (Array.isArray(data)) {
+      return data;
+    }
+    if (data && "$values" in data && Array.isArray(data.$values)) {
+      // Also unwrap roles.$values for each user
+      return data.$values.map((user: any) => ({
+        ...user,
+        roles: user.roles?.$values ?? user.roles ?? [],
+      }));
+    }
+    console.error("Unexpected response format:", data);
+    return [];
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    throw error;
+  }
+};
+
+export const toggleUserApproval = async (
+  userId: string,
+  approved: boolean
+): Promise<void> => {
+  try {
+    await apiClient.put(`user/users/${userId}/approve`, approved, {
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("Error toggling user approval:", error);
+    throw error;
+  }
+};
+
+export const deleteUser = async (userId: string): Promise<void> => {
+  try {
+    await apiClient.delete(`user/users/${userId}`);
+  } catch (error) {
+    console.error("Error deleting user:", error);
     throw error;
   }
 };

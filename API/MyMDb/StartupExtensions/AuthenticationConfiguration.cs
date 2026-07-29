@@ -32,6 +32,26 @@ namespace MyMDb.StartupExtensions
                     ValidAudience = builder.Configuration["Jwt:Issuer"],
                     IssuerSigningKey = new SymmetricSecurityKey(key)
                 };
+
+                // Check for stream_auth cookie on streaming endpoints
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var path = context.HttpContext.Request.Path;
+
+                        // For streaming endpoints, check for stream_auth cookie
+                        if (path.StartsWithSegments("/mymdb/api/media/stream"))
+                        {
+                            var streamCookie = context.Request.Cookies["stream_auth"];
+                            if (!string.IsNullOrEmpty(streamCookie))
+                            {
+                                context.Token = streamCookie;
+                            }
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
             services.AddAuthorization(options =>

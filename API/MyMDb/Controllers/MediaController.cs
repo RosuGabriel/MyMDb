@@ -6,6 +6,7 @@ using MyMDb.ServiceInterfaces;
 using MyMDb.Data;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using MyMDb.Helpers;
 
 namespace MyMDb.Controllers
 {
@@ -21,8 +22,10 @@ namespace MyMDb.Controllers
         private readonly ApplicationDbContext _context;
         private readonly int bufferSize;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ILogger<MediaController> _logger;
+        private readonly IWebHostEnvironment _env;
 
-        public MediaController(IMediaService mediaService, IContinueWatchingService continueWatchingService, IFileProcessingService fileProcessingService, IMapper mapper, IConfiguration configuration, ApplicationDbContext context, IHttpContextAccessor httpContextAccessor)
+        public MediaController(IMediaService mediaService, IContinueWatchingService continueWatchingService, IFileProcessingService fileProcessingService, IMapper mapper, IConfiguration configuration, ApplicationDbContext context, IHttpContextAccessor httpContextAccessor, ILogger<MediaController> logger, IWebHostEnvironment env)
         {
             _mediaService = mediaService;
             _continueWatchingService = continueWatchingService;
@@ -31,6 +34,8 @@ namespace MyMDb.Controllers
             _configuration = configuration;
             _context = context;
             _httpContextAccessor = httpContextAccessor;
+            _logger = logger;
+            _env = env;
             if (_configuration["VideoBufferSize"] != null)
             {
                 bufferSize = int.Parse(_configuration["VideoBufferSize"]!);
@@ -148,6 +153,75 @@ namespace MyMDb.Controllers
             return Ok(episodeDtos);
         }
 
+        // -------------------- video streaming
+
+        [HttpPost]
+        [Authorize]
+        [Route("stream-token/{id}")]
+        public async Task<IActionResult> GetStreamToken(Guid id)
+        {
+            // Verify media exists and has video
+            var media = await _mediaService.GetById(id);
+            
+            if (media == null)
+            {
+                return NotFound("Media not found");
+            }
+
+            if (string.IsNullOrEmpty(media.VideoPath))
+            {
+                return NotFound("No video file associated with this media");
+            }
+
+            // Get the current JWT token from the authenticated user
+            var token = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            
+            if (string.IsNullOrEmpty(token))
+            {
+                return Unauthorized("No token provided");
+            }
+
+            // Set HTTP-only cookie with the JWT for streaming
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = !_env.IsDevelopment(), // Only require HTTPS in production
+                SameSite = SameSiteMode.Lax, // Lax allows cookie in video element requests
+                Path = "/mymdb/api/media/stream",
+                MaxAge = TimeSpan.FromHours(4) // Cookie valid for 4 hours
+            };
+
+            Response.Cookies.Append("stream_auth", token, cookieOptions);
+
+            return Ok(new { success = true });
+        }
+
+        [HttpGet]
+        [Authorize]
+        [Route("stream/{id}")]
+        public async Task<IActionResult> StreamVideo(Guid id)
+        {
+            var streamInfo = await _mediaService.GetVideoStreamInfoAsync(id);
+
+            if (!streamInfo.IsSuccess)
+            {
+                if (streamInfo.ErrorMessage == "Server configuration error")
+                {
+                    _logger.LogError("Paths:Root is not configured");
+                    return StatusCode(500, streamInfo.ErrorMessage);
+                }
+
+                if (streamInfo.ErrorMessage == "Video file not found on server")
+                {
+                    _logger.LogWarning("Video file not found for media {MediaId}", id);
+                }
+
+                return NotFound(streamInfo.ErrorMessage);
+            }
+
+            return PhysicalFile(streamInfo.FullPath, streamInfo.ContentType, enableRangeProcessing: true);
+        }
+
         // -------------------- add
 
         [HttpPost]
@@ -204,50 +278,72 @@ namespace MyMDb.Controllers
         [HttpPost]
         [Authorize("admin")]
         [Route("add_movie")]
-        public async Task<IActionResult> AddMovie([FromForm] MovieDto movie, IFormFile? poster, IFormFile? video)
+        [DisableFormValueModelBinding]
+        [RequestSizeLimit(10L * 1024 * 1024 * 1024)] // 10GB limit
+        public async Task<IActionResult> AddMovie()
         {
-            if (!ModelState.IsValid)
+            if (!MultipartRequestHelper.IsMultipartContentType(Request.ContentType))
             {
-                return BadRequest(ModelState);
+                return BadRequest("Expected a multipart request.");
             }
 
-            var newMovie = _mapper.Map<Movie>(movie);
-
-            if (poster != null)
+            try
             {
-                if (!Extensions.IsImageFile(poster.FileName))
+                _logger.LogInformation("Starting streamed movie upload");
+
+                var tempPath = Path.Combine(_configuration["Paths:Root"]!, "temp");
+                if (!Directory.Exists(tempPath))
+                    Directory.CreateDirectory(tempPath);
+
+                var formData = await StreamingHelpers.StreamMultipartToDiskAsync(
+                    Request,
+                    videosBasePath: Path.Combine(_configuration["Paths:Root"]!, _configuration["Paths:Videos"]!),
+                    imagesBasePath: Path.Combine(_configuration["Paths:Root"]!, _configuration["Paths:Images"]!),
+                    tempPath: tempPath,
+                    bufferSize: bufferSize,
+                    sanitizeFileName: _mediaService.SanitizeFileName,
+                    _logger,
+                    HttpContext.RequestAborted);
+
+                // Build MovieDto from form fields
+                var movieDto = new MovieDto
                 {
-                    return BadRequest("Not an image file provided for poster.");
-                }
-                if (newMovie.PosterPath == null)
+                    Title = formData.FormFields.GetValueOrDefault("title"),
+                    Description = formData.FormFields.GetValueOrDefault("description"),
+                    PosterPath = formData.FormFields.GetValueOrDefault("posterPath"),
+                    VideoPath = formData.FormFields.GetValueOrDefault("videoPath")
+                };
+
+                if (formData.FormFields.TryGetValue("releaseDate", out var releaseDateStr) &&
+                    DateTime.TryParse(releaseDateStr, out var releaseDate))
                 {
-                    return BadRequest("No path provided for poster.");
+                    movieDto.ReleaseDate = releaseDate;
                 }
 
-                newMovie.PosterPath = _configuration["Paths:Images"] + _mediaService.SanitizeFileName(newMovie.PosterPath);
+                string? posterTempPath = formData.Files.GetValueOrDefault("poster")?.TempFilePath;
+                string? videoFinalPath = formData.Files.GetValueOrDefault("video")?.TempFilePath;
 
-                await _fileProcessingService.ProcessFileAsync(poster, _configuration["Paths:Root"] + newMovie.PosterPath);
+                _logger.LogInformation("Streamed upload complete. Poster: {Poster}, Video: {Video}",
+                    posterTempPath ?? "none", videoFinalPath ?? "none");
+
+                var newMovie = await _mediaService.AddMovieStreamed(movieDto, posterTempPath, videoFinalPath);
+                return Ok(newMovie);
             }
-
-            if (video != null)
+            catch (ArgumentException ex)
             {
-                if (!Extensions.IsVideoFile(video.FileName))
-                {
-                    return BadRequest("Not a video file provided for video.");
-                }
-                if (newMovie.VideoPath == null)
-                {
-                    return BadRequest("No path provided for video.");
-                }
-
-                newMovie.VideoPath = _configuration["Paths:Videos"] + _mediaService.SanitizeFileName(newMovie.VideoPath);
-
-                await _fileProcessingService.ProcessVideoFileAsync(video, _configuration["Paths:Root"] + newMovie.VideoPath, _mediaService, bufferSize);
+                _logger.LogWarning(ex, "Invalid argument during movie upload");
+                return BadRequest(ex.Message);
             }
-
-            newMovie = await _mediaService.AddMovie(newMovie);
-
-            return Ok(newMovie);
+            catch (OperationCanceledException)
+            {
+                _logger.LogWarning("Movie upload was cancelled");
+                return StatusCode(499, "Upload cancelled");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during streamed movie upload");
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
         }
 
 
@@ -261,96 +357,131 @@ namespace MyMDb.Controllers
                 return BadRequest(ModelState);
             }
 
-            var newSeries = _mapper.Map<Series>(series);
-
-            // Setting up series directory
-            var seriesImagesDirectory = Path.Combine(_configuration["Paths:Root"]!, _configuration["Paths:Images"]!, _mediaService.SanitizeFileName(newSeries.Title));
-            if (!Directory.Exists(seriesImagesDirectory))
+            try
             {
-                Directory.CreateDirectory(seriesImagesDirectory);
+                var newSeries = await _mediaService.AddSeries(series, poster);
+                return Ok(newSeries);
             }
-
-            var seriesVideosDirectory = Path.Combine(_configuration["Paths:Root"]!, _configuration["Paths:Videos"]!, _mediaService.SanitizeFileName(newSeries.Title));
-            if (!Directory.Exists(seriesVideosDirectory))
+            catch (ArgumentException ex)
             {
-                Directory.CreateDirectory(seriesVideosDirectory);
+                return BadRequest(ex.Message);
             }
-
-            if (poster != null)
+            catch (Exception ex)
             {
-                if (!Extensions.IsImageFile(poster.FileName))
-                {
-                    return BadRequest("Not an image file provided for poster.");
-                }
-                if (newSeries.PosterPath == null)
-                {
-                    return BadRequest("No path provided for poster");
-                }
-
-                newSeries.PosterPath = _mediaService.SanitizeFileName(Path.Combine(_configuration["Paths:Images"]!, newSeries.Title, newSeries.PosterPath));
-
-                await _fileProcessingService.ProcessFileAsync(poster, _configuration["Paths:Root"] + newSeries.PosterPath);
+                return StatusCode(500, $"An error occurred: {ex.Message}");
             }
-
-            newSeries = await _mediaService.AddSeries(newSeries);
-
-            return Ok(newSeries);
         }
 
         [HttpPost]
         [Authorize("admin")]
         [Route("add_episode")]
-        public async Task<IActionResult> AddEpisode([FromForm] EpisodeDto episode, IFormFile? poster, IFormFile? video)
+        [DisableFormValueModelBinding]
+        [RequestSizeLimit(10L * 1024 * 1024 * 1024)] // 10GB limit
+        public async Task<IActionResult> AddEpisode()
         {
-            if (!ModelState.IsValid)
+            if (!MultipartRequestHelper.IsMultipartContentType(Request.ContentType))
             {
-                return BadRequest(ModelState);
+                return BadRequest("Expected a multipart request.");
             }
 
-            var newEpisode = _mapper.Map<Episode>(episode);
-
-            var series = await _mediaService.GetSeriesById(newEpisode.SeriesId);
-
-            if (series == null)
+            try
             {
-                return BadRequest("The episode is added to an non-existent series");
-            }
+                _logger.LogInformation("Starting streamed episode upload");
 
-            if (poster != null)
+                var tempPath = Path.Combine(_configuration["Paths:Root"]!, "temp");
+                if (!Directory.Exists(tempPath))
+                    Directory.CreateDirectory(tempPath);
+
+                // We need seriesId first to determine the correct video path
+                // For episodes, we'll stream to temp first and move after
+                var formData = await StreamingHelpers.StreamMultipartToDiskAsync(
+                    Request,
+                    videosBasePath: tempPath, // Temporarily stream to temp, will be moved by service
+                    imagesBasePath: Path.Combine(_configuration["Paths:Root"]!, _configuration["Paths:Images"]!),
+                    tempPath: tempPath,
+                    bufferSize: bufferSize,
+                    sanitizeFileName: _mediaService.SanitizeFileName,
+                    _logger,
+                    HttpContext.RequestAborted);
+
+                // Build EpisodeDto from form fields
+                var episodeDto = new EpisodeDto
+                {
+                    Title = formData.FormFields.GetValueOrDefault("title"),
+                    Description = formData.FormFields.GetValueOrDefault("description"),
+                    PosterPath = formData.FormFields.GetValueOrDefault("posterPath"),
+                    VideoPath = formData.FormFields.GetValueOrDefault("videoPath")
+                };
+
+                if (formData.FormFields.TryGetValue("seriesId", out var seriesIdStr) &&
+                    Guid.TryParse(seriesIdStr, out var seriesId))
+                {
+                    episodeDto.SeriesId = seriesId;
+                }
+
+                if (formData.FormFields.TryGetValue("seasonNumber", out var seasonStr) &&
+                    int.TryParse(seasonStr, out var seasonNumber))
+                {
+                    episodeDto.SeasonNumber = seasonNumber;
+                }
+
+                if (formData.FormFields.TryGetValue("episodeNumber", out var episodeStr) &&
+                    int.TryParse(episodeStr, out var episodeNumber))
+                {
+                    episodeDto.EpisodeNumber = episodeNumber;
+                }
+
+                if (formData.FormFields.TryGetValue("releaseDate", out var releaseDateStr) &&
+                    DateTime.TryParse(releaseDateStr, out var releaseDate))
+                {
+                    episodeDto.ReleaseDate = releaseDate;
+                }
+
+                string? posterTempPath = formData.Files.GetValueOrDefault("poster")?.TempFilePath;
+                string? videoTempPath = formData.Files.GetValueOrDefault("video")?.TempFilePath;
+
+                // For episodes, we need to move the video to the correct series folder
+                string? videoFinalPath = null;
+                if (!string.IsNullOrEmpty(videoTempPath) && System.IO.File.Exists(videoTempPath) && episodeDto.SeriesId.HasValue)
+                {
+                    var series = await _mediaService.GetSeriesById(episodeDto.SeriesId.Value);
+                    if (series != null && !string.IsNullOrEmpty(episodeDto.VideoPath))
+                    {
+                        videoFinalPath = Path.Combine(
+                            _configuration["Paths:Root"]!,
+                            _configuration["Paths:Videos"]!,
+                            series.Title,
+                            _mediaService.SanitizeFileName(episodeDto.VideoPath));
+
+                        var videoDir = Path.GetDirectoryName(videoFinalPath);
+                        if (!string.IsNullOrEmpty(videoDir) && !Directory.Exists(videoDir))
+                            Directory.CreateDirectory(videoDir);
+
+                        System.IO.File.Move(videoTempPath, videoFinalPath, overwrite: true);
+                    }
+                }
+
+                _logger.LogInformation("Streamed episode upload complete. Poster: {Poster}, Video: {Video}",
+                    posterTempPath ?? "none", videoFinalPath ?? "none");
+
+                var newEpisode = await _mediaService.AddEpisodeStreamed(episodeDto, posterTempPath, videoFinalPath);
+                return Ok(newEpisode);
+            }
+            catch (ArgumentException ex)
             {
-                if (!Extensions.IsImageFile(poster.FileName))
-                {
-                    return BadRequest("Not an image file provided for poster.");
-                }
-                if (newEpisode.PosterPath == null)
-                {
-                    return BadRequest("No path provided for poster");
-                }
-
-                newEpisode.PosterPath = _mediaService.SanitizeFileName(Path.Combine(_configuration["Paths:Images"]!, series.Title, newEpisode.PosterPath));
-
-                await _fileProcessingService.ProcessFileAsync(poster, _configuration["Paths:Root"] + newEpisode.PosterPath);
+                _logger.LogWarning(ex, "Invalid argument during episode upload");
+                return BadRequest(ex.Message);
             }
-
-            if (video != null)
+            catch (OperationCanceledException)
             {
-                if (!Extensions.IsVideoFile(video.FileName))
-                {
-                    return BadRequest("Not a video file provided for video.");
-                }
-                if (newEpisode.VideoPath == null)
-                {
-                    return BadRequest("No path provided for video");
-                }
-
-                newEpisode.VideoPath = _mediaService.SanitizeFileName(Path.Combine(_configuration["Paths:Videos"]!, series.Title, newEpisode.VideoPath));
-
-                await _fileProcessingService.ProcessVideoFileAsync(video, _configuration["Paths:Root"] + newEpisode.VideoPath, _mediaService, bufferSize);
+                _logger.LogWarning("Episode upload was cancelled");
+                return StatusCode(499, "Upload cancelled");
             }
-
-            newEpisode = await _mediaService.AddEpisode(newEpisode);
-
-            return Ok(newEpisode);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during streamed episode upload");
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
         }
 
         [HttpPost]
@@ -389,58 +520,31 @@ namespace MyMDb.Controllers
 
             if (id != movieToEdit.Id)
             {
-                return BadRequest();
+                return BadRequest("ID mismatch");
             }
 
-            var currentMovie = await _mediaService.GetMovieById(id);
-            if (currentMovie == null)
+            try
             {
-                return NotFound();
-            }
+                var updatedMovie = await _mediaService.EditMovie(id, movieToEdit, poster, video);
+                if (updatedMovie == null)
+                    return NotFound();
 
-            if (poster != null)
+                return Ok(updatedMovie);
+            }
+            catch (ArgumentException ex)
             {
-                if (!Extensions.IsImageFile(poster.FileName))
-                {
-                    return BadRequest("Not an image file provided for poster.");
-                }
-                if (movieToEdit.PosterPath == null)
-                {
-                    return BadRequest("No path provided for poster.");
-                }
-
-                movieToEdit.PosterPath = _configuration["Paths:Images"] + _mediaService.SanitizeFileName(movieToEdit.PosterPath);
-
-                await _fileProcessingService.ProcessFileAsync(poster, _configuration["Paths:Root"] + movieToEdit.PosterPath);
+                return BadRequest(ex.Message);
             }
-
-            if (video != null)
+            catch (Exception ex)
             {
-                if (!Extensions.IsVideoFile(video.FileName))
-                {
-                    return BadRequest("Not a video file provided for video.");
-                }
-                if (movieToEdit.VideoPath == null)
-                {
-                    return BadRequest("No path provided for video.");
-                }
-
-                movieToEdit.VideoPath = _configuration["Paths:Videos"] + _mediaService.SanitizeFileName(movieToEdit.VideoPath);
-
-                await _fileProcessingService.ProcessVideoFileAsync(video, _configuration["Paths:Root"] + movieToEdit.VideoPath, _mediaService, bufferSize);
+                return StatusCode(500, $"An error occurred: {ex.Message}");
             }
-
-            _mapper.Map(movieToEdit, currentMovie);
-
-            await _mediaService.EditMovie(id, currentMovie);
-
-            return Ok(currentMovie);
         }
 
         [HttpPost]
         [Authorize("admin")]
         [Route("edit_series/{id}")]
-        public async Task<IActionResult> EditSeries(Guid id, [FromBody] SeriesDto seriesToEdit, IFormFile? poster)
+        public async Task<IActionResult> EditSeries(Guid id, [FromForm] SeriesDto seriesToEdit, IFormFile? poster)
         {
             if (!ModelState.IsValid)
             {
@@ -449,42 +553,31 @@ namespace MyMDb.Controllers
 
             if (id != seriesToEdit.Id)
             {
-                return BadRequest();
+                return BadRequest("ID mismatch");
             }
 
-            var currentSeries = await _mediaService.GetSeriesById(id);
-            if (currentSeries == null)
+            try
             {
-                return NotFound();
-            }
+                var updatedSeries = await _mediaService.EditSeries(id, seriesToEdit, poster);
+                if (updatedSeries == null)
+                    return NotFound();
 
-            if (poster != null)
+                return Ok(updatedSeries);
+            }
+            catch (ArgumentException ex)
             {
-                if (!Extensions.IsImageFile(poster.FileName))
-                {
-                    return BadRequest("Not an image file provided for poster.");
-                }
-                if (seriesToEdit.PosterPath == null)
-                {
-                    return BadRequest("No path provided for poster");
-                }
-
-                seriesToEdit.PosterPath = _mediaService.SanitizeFileName(Path.Combine(_configuration["Paths:Images"]!, seriesToEdit.Title!, seriesToEdit.PosterPath));
-
-                await _fileProcessingService.ProcessFileAsync(poster, _configuration["Paths:Root"] + seriesToEdit.PosterPath);
+                return BadRequest(ex.Message);
             }
-
-            _mapper.Map(seriesToEdit, currentSeries);
-
-            await _mediaService.EditSeries(id, currentSeries);
-
-            return Ok(currentSeries);
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
         }
 
         [HttpPost]
         [Authorize("admin")]
         [Route("edit_episode/{id}")]
-        public async Task<IActionResult> EditEpisode(Guid id, [FromBody] EpisodeDto episodeToEdit, IFormFile? poster, IFormFile? video)
+        public async Task<IActionResult> EditEpisode(Guid id, [FromForm] EpisodeDto episodeToEdit, IFormFile? poster, IFormFile? video)
         {
             if (!ModelState.IsValid)
             {
@@ -493,55 +586,85 @@ namespace MyMDb.Controllers
 
             if (id != episodeToEdit.Id)
             {
-                return BadRequest();
+                return BadRequest("ID mismatch");
             }
 
-            var currentEpisode = await _mediaService.GetEpisodeById(id);
-            if (currentEpisode == null)
+            try
             {
-                return NotFound();
-            }
+                var updatedEpisode = await _mediaService.EditEpisode(id, episodeToEdit, poster, video);
+                if (updatedEpisode == null)
+                    return NotFound();
 
-            if (poster != null)
+                return Ok(updatedEpisode);
+            }
+            catch (ArgumentException ex)
             {
-                if (!Extensions.IsImageFile(poster.FileName))
-                {
-                    return BadRequest("Not an image file provided for poster.");
-                }
-                if (episodeToEdit.PosterPath == null)
-                {
-                    return BadRequest("No path provided for poster");
-                }
-
-                episodeToEdit.PosterPath = _mediaService.SanitizeFileName(Path.Combine(_configuration["Paths:Images"]!, currentEpisode.Series!.Title, episodeToEdit.PosterPath));
-
-                await _fileProcessingService.ProcessFileAsync(poster, _configuration["Paths:Root"] + episodeToEdit.PosterPath);
+                return BadRequest(ex.Message);
             }
-
-            if (video != null)
+            catch (Exception ex)
             {
-                if (!Extensions.IsVideoFile(video.FileName))
-                {
-                    return BadRequest("Not a video file provided for video.");
-                }
-                if (episodeToEdit.VideoPath == null)
-                {
-                    return BadRequest("No path provided for video");
-                }
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
 
-                episodeToEdit.VideoPath = _mediaService.SanitizeFileName(Path.Combine(_configuration["Paths:Videos"]!, currentEpisode.Series!.Title, episodeToEdit.VideoPath));
+        // -------------------- edit/update attribute
 
-                await _fileProcessingService.ProcessVideoFileAsync(video, _configuration["Paths:Root"] + episodeToEdit.VideoPath, _mediaService, bufferSize);
+        [HttpPut]
+        [Authorize("admin")]
+        [Route("update_attribute")]
+        public async Task<IActionResult> UpdateAttribute([FromForm] MediaAttributeDto attributeDto, IFormFile? file)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
             }
 
-            _mapper.Map(episodeToEdit, currentEpisode);
+            try
+            {
+                var attribute = _mapper.Map<MediaAttribute>(attributeDto);
+                var updatedAttribute = await _mediaService.UpdateAttribute(attribute, file);
 
-            await _mediaService.EditEpisode(id, currentEpisode);
+                if (updatedAttribute == null)
+                    return NotFound("Attribute not found");
 
-            return Ok(currentEpisode);
+                return Ok(updatedAttribute);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
         }
 
         // -------------------- delete
+
+        [HttpDelete]
+        [Authorize("admin")]
+        [Route("delete_attribute/{mediaId}")]
+        public async Task<IActionResult> DeleteAttribute(Guid mediaId, [FromQuery] string attributeType, [FromQuery] string language)
+        {
+            if (string.IsNullOrWhiteSpace(attributeType) || string.IsNullOrWhiteSpace(language))
+            {
+                return BadRequest("Attribute type and language are required");
+            }
+
+            try
+            {
+                var deleted = await _mediaService.DeleteAttribute(mediaId, attributeType, language);
+
+                if (!deleted)
+                    return NotFound("Attribute not found");
+
+                return Ok(new { message = "Attribute deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
 
         [HttpDelete]
         [Authorize("admin")]
@@ -586,7 +709,7 @@ namespace MyMDb.Controllers
 
                 if (continueWatchings == null)
                 {
-                    return NotFound("Continue watching not found");
+                    return NoContent(); // 204 - no watch history exists yet
                 }
 
                 if (!ModelState.IsValid)
@@ -674,12 +797,12 @@ namespace MyMDb.Controllers
             try
             {
                 var continueWatching = await _continueWatchingService.AddOrUpdateAsync(userId, updatedContinueWatching.MediaId, updatedContinueWatching.EpisodeId, updatedContinueWatching.WatchedTime, updatedContinueWatching.Duration);
-                
+
                 if (!ModelState.IsValid)
                 {
                     return BadRequest(ModelState);
                 }
-                
+
                 return Ok(continueWatching);
             }
             catch (ActionResponseExceptions.BaseException ex)
@@ -711,7 +834,7 @@ namespace MyMDb.Controllers
             try
             {
                 await _continueWatchingService.DeleteAsync(userId, continueWatching.MediaId, continueWatching.EpisodeId);
-                
+
                 if (!ModelState.IsValid)
                 {
                     return BadRequest(ModelState);

@@ -61,12 +61,12 @@ namespace MyMDb.Controllers
                 return BadRequest("There is already an user with this email");
             }
 
-            var user = new AppUser { UserName = userDto.Email, Email = userDto.Email};
+            var user = new AppUser { UserName = userDto.Email, Email = userDto.Email };
             var result = await _userManager.CreateAsync(user, userDto.Password);
 
             if (!result.Succeeded)
             {
-                foreach (var error in result.Errors) 
+                foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError("Errors", error.Description);
                     return BadRequest(ModelState);
@@ -86,9 +86,9 @@ namespace MyMDb.Controllers
 
             var userProfile = new UserProfile();
             userProfile.UserId = user.Id;
-            
+
             userProfile = await _userService.CreateUserProfileAsync(userProfile);
-            
+
             if (userProfile == null)
             {
                 return BadRequest("Unknown error creating profile");
@@ -127,7 +127,7 @@ namespace MyMDb.Controllers
                 return Unauthorized(new { Message = "User not approved" });
             }
 
-            var result = await _signInManager.CheckPasswordSignInAsync(user, userDto.Password, false);
+            var result = await _signInManager.CheckPasswordSignInAsync(user, userDto.Password, true);
             if (!result.Succeeded)
             {
                 _logger.LogWarning("Failed login attempt for user: {Email}", userDto.Email);
@@ -170,7 +170,7 @@ namespace MyMDb.Controllers
             }
 
             var user = await _userManager.FindByIdAsync(userId);
-            
+
             if (user == null)
             {
                 return NotFound("User from token not found!");
@@ -209,8 +209,8 @@ namespace MyMDb.Controllers
 
             var userProfile = await _userService.GetUserProfileAsync(userId);
 
-            if (userProfile == null) 
-            { 
+            if (userProfile == null)
+            {
                 return NotFound();
             }
 
@@ -229,7 +229,7 @@ namespace MyMDb.Controllers
 
             var loggedUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            if (!ModelState.IsValid) 
+            if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
@@ -240,24 +240,24 @@ namespace MyMDb.Controllers
             }
 
             var user = await _userService.GetUserProfileAsync(loggedUserId);
-            if (user == null) 
+            if (user == null)
             {
                 return NotFound();
             }
 
-            if (profilePic != null) 
+            if (profilePic != null)
             {
                 if (!Extensions.IsImageFile(profilePic.FileName))
                 {
                     return BadRequest("Not an image file provided.");
                 }
-                if(userProfile.ProfilePicPath == null)
+                if (userProfile.ProfilePicPath == null)
                 {
                     return BadRequest("No path provided for profile pic");
                 }
 
                 userProfile.ProfilePicPath = _configuration["Paths:ProfilePics"] + userProfile.ProfilePicPath;
-                
+
                 using (var stream = new FileStream(_configuration["Paths:Root"] + userProfile.ProfilePicPath, FileMode.Create))
                 {
                     await profilePic.CopyToAsync(stream);
@@ -265,7 +265,7 @@ namespace MyMDb.Controllers
             }
 
             var updatedProfile = await _userService.EditUserProfileAsync(loggedUserId, userProfile);
-            
+
             if (updatedProfile == null)
             {
                 return BadRequest("Profile editing failed");
@@ -293,7 +293,7 @@ namespace MyMDb.Controllers
 
             var existentReview = await _reviewService.GetByUserAsync(loggedUserId, review.mediaId);
 
-            if (existentReview != null) 
+            if (existentReview != null)
             {
                 return BadRequest("Media already reviewed");
             }
@@ -345,6 +345,134 @@ namespace MyMDb.Controllers
             await _reviewService.DeleteReview(review);
 
             return Ok();
+        }
+
+        [HttpHead]
+        [AllowAnonymous]
+        [Route("health")]
+        public async Task<IActionResult> Health()
+        {
+            try
+            {
+                // Test database connection by attempting a simple query
+                var user = await _userManager.FindByEmailAsync("healthcheck@test.com");
+                return Ok(new { status = "healthy", database = "connected" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Health check failed: {ex.Message}");
+                return StatusCode(503, new { status = "unhealthy", database = "disconnected", error = ex.Message });
+            }
+        }
+
+        // -------------------- Admin User Management
+
+        [HttpGet]
+        [Authorize("admin")]
+        [Route("users")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var users = _userManager.Users.ToList();
+            var adminUsers = new List<AdminUserDto>();
+
+            foreach (var user in users)
+            {
+                var profile = await _userService.GetUserProfileAsync(user.Id);
+                var roles = await _userManager.GetRolesAsync(user);
+
+                adminUsers.Add(new AdminUserDto
+                {
+                    Id = user.Id,
+                    Email = user.Email,
+                    UserName = profile?.UserName,
+                    ProfilePicPath = profile?.ProfilePicPath,
+                    Approved = user.Approved,
+                    Roles = roles
+                });
+            }
+
+            return Ok(adminUsers);
+        }
+
+        [HttpPut]
+        [Authorize("admin")]
+        [Route("users/{userId}/approve")]
+        public async Task<IActionResult> ToggleUserApproval(string userId, [FromBody] bool approved)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
+
+            // Prevent admin from changing their own approval status
+            var loggedUserId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == loggedUserId)
+            {
+                return BadRequest("Cannot change your own approval status");
+            }
+
+            user.Approved = approved;
+            var result = await _userManager.UpdateAsync(user);
+
+            if (!result.Succeeded)
+            {
+                return BadRequest("Failed to update user approval status");
+            }
+
+            return Ok(new { message = "User approval status updated", approved = user.Approved });
+        }
+
+        [HttpDelete]
+        [Authorize("admin")]
+        [Route("users/{userId}")]
+        public async Task<IActionResult> DeleteUser(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
+
+            // Prevent admin from deleting themselves
+            var loggedUserId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == loggedUserId)
+            {
+                return BadRequest("Cannot delete your own account");
+            }
+
+            // Check if trying to delete another admin
+            var roles = await _userManager.GetRolesAsync(user);
+            if (roles.Contains("admin"))
+            {
+                return BadRequest("Cannot delete another admin user");
+            }
+
+            // Delete user profile first
+            var profile = await _userService.GetUserProfileAsync(userId);
+            if (profile != null)
+            {
+                // Delete profile pic if exists
+                if (!string.IsNullOrEmpty(profile.ProfilePicPath))
+                {
+                    var profilePicFullPath = Path.Combine(_configuration["Paths:Root"]!, profile.ProfilePicPath);
+                    if (System.IO.File.Exists(profilePicFullPath))
+                    {
+                        System.IO.File.Delete(profilePicFullPath);
+                    }
+                }
+            }
+
+            var result = await _userManager.DeleteAsync(user);
+
+            if (!result.Succeeded)
+            {
+                return BadRequest("Failed to delete user");
+            }
+
+            return Ok(new { message = "User deleted successfully" });
         }
     }
 }

@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { CreateMedia, AddEpisode } from "./components/CreateMedia";
+import EditMovie from "./components/EditMovie";
+import EditSeries from "./components/EditSeries";
+import EditEpisode from "./components/EditEpisode";
 import OfflinePage from "./components/OfflinePage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ListMedia from "./components/ListMedia";
@@ -11,6 +14,9 @@ import ShowMedia from "./components/ShowMedia";
 import Navbar from "./components/Navbar";
 import Profile from "./components/Profile";
 import AddAttribute from "./components/AddAttribute";
+import EditAttribute from "./components/EditAttribute";
+import ManageAttributes from "./components/ManageAttributes";
+import ManageUsers from "./components/ManageUsers";
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -46,7 +52,7 @@ const App: React.FC = () => {
       return;
     }
 
-    fetch("/api/health", { method: "HEAD" })
+    fetch("/mymdb/api/user/health", { method: "HEAD" })
       .then((res) => {
         if (!res.ok && res.status !== 404 && res.status !== 401) {
           setOfflineType("server-down");
@@ -100,6 +106,30 @@ const App: React.FC = () => {
             <Route
               path="/mymdb/add-attribute/:id"
               element={<ProtectedRoute component={AddAttribute} />}
+            />
+            <Route
+              path="/mymdb/manage-attributes/:id"
+              element={<ProtectedRoute component={ManageAttributes} />}
+            />
+            <Route
+              path="/mymdb/edit-attribute/:id"
+              element={<ProtectedRoute component={EditAttribute} />}
+            />
+            <Route
+              path="/mymdb/edit-movie/:id"
+              element={<ProtectedRoute component={EditMovie} />}
+            />
+            <Route
+              path="/mymdb/edit-series/:id"
+              element={<ProtectedRoute component={EditSeries} />}
+            />
+            <Route
+              path="/mymdb/edit-episode/:id"
+              element={<ProtectedRoute component={EditEpisode} />}
+            />
+            <Route
+              path="/mymdb/manage-users"
+              element={<ProtectedRoute component={ManageUsers} />}
             />
           </Routes>
         </div>

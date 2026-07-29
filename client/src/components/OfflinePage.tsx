@@ -23,7 +23,7 @@ export default function OfflinePage({
         padding: "1rem",
       }}
     >
-      <img src="/redpanda_bgless.png" alt="App Icon" width={100} height={100} />
+      <img src="/icon-bgless.png" alt="App Icon" width={200} height={200} />
       <br />
       <br />
       <h1>{messages[type]}</h1>

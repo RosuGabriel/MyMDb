@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.FileProviders;
+using Microsoft.AspNetCore.StaticFiles;
 using MyMDb.Helpers;
 
 namespace MyMDb.StartupExtensions
@@ -11,10 +12,8 @@ namespace MyMDb.StartupExtensions
             app.UseAuthentication();
             app.UseAuthorization();
 
-            if (int.Parse(app.Configuration["ProtectStaticFiles"]!) == 1)
-            {
-                app.UseMiddleware<ProtectedStaticFilesMiddleware>("/mymdb/static");
-            }
+            var static_files_url = "/mymdb/static";
+            app.UseMiddleware<ProtectedStaticFilesMiddleware>(static_files_url);
 
             app.UseCors("AllowMyClient");
 
@@ -28,10 +27,21 @@ namespace MyMDb.StartupExtensions
             }
 
             var rootPath = Path.Combine(Directory.GetCurrentDirectory(), app.Configuration["Paths:Root"]!);
+
+            var fileExtensionContentTypeProvider = new FileExtensionContentTypeProvider();
+            fileExtensionContentTypeProvider.Mappings[".vtt"] = "text/vtt";
+
             app.UseStaticFiles(new StaticFileOptions
             {
                 FileProvider = new PhysicalFileProvider(rootPath),
-                RequestPath = "/mymdb/static"
+                RequestPath = static_files_url,
+                ContentTypeProvider = fileExtensionContentTypeProvider,
+                ServeUnknownFileTypes = false,
+                OnPrepareResponse = ctx =>
+                {
+                    // Enable range requests for video streaming
+                    ctx.Context.Response.Headers.Append("Accept-Ranges", "bytes");
+                }
             });
         }
     }

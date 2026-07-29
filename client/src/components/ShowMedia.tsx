@@ -19,6 +19,21 @@ import {
   fetchContinueWatchingById,
 } from "../services/ContinueWatchingService";
 
+const formatReleaseDate = (releaseDate?: string | Date) => {
+  if (!releaseDate) {
+    return null;
+  }
+
+  const parsedDate =
+    releaseDate instanceof Date ? releaseDate : new Date(releaseDate);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return null;
+  }
+
+  return parsedDate.toLocaleDateString();
+};
+
 const ShowMedia: React.FC<{ mediaId: string; season: number }> = ({
   mediaId,
   season,
@@ -44,12 +59,10 @@ const ShowMedia: React.FC<{ mediaId: string; season: number }> = ({
         const fetchedMedia = await fetchMediaById(mediaId);
         document.title = fetchedMedia!.title;
         if (fetchedMedia.posterPath) {
-          fetchedMedia.posterPath =
-            API_URL + "static/" + fetchedMedia.posterPath;
+          fetchedMedia.posterPath = "/" + fetchedMedia.posterPath;
         } else if (fetchedMedia.mediaType === "Episode") {
           if (fetchedMedia.series && fetchedMedia.series.posterPath) {
-            fetchedMedia.posterPath =
-              API_URL + "static/" + fetchedMedia.series.posterPath;
+            fetchedMedia.posterPath = "/" + fetchedMedia.series.posterPath;
           } else {
             fetchedMedia.posterPath = "/film.png";
           }
@@ -91,20 +104,56 @@ const ShowMedia: React.FC<{ mediaId: string; season: number }> = ({
             <ShowMovieOrEpisode {...media} />
           )}
           {isAdminUser && (
-            <div className="d-flex justify-content-around mt-5">
-              {media.mediaType == "Series" && (
-                <a
-                  className="btn btn-primary"
-                  href={"/mymdb/add-episode/" + media.id}
-                >
-                  Add Episode
-                </a>
-              )}
+            <div className="d-flex justify-content-around mt-5 flex-wrap gap-2">
+              <div className="btn-group btn-group-toggle" data-toggle="buttons">
+                {media.mediaType == "Series" && (
+                  <>
+                    <a
+                      className="btn btn-primary"
+                      href={"/mymdb/add-episode/" + media.id}
+                    >
+                      Add Episode
+                    </a>
+                    <a
+                      className="btn btn-primary"
+                      href={"/mymdb/edit-series/" + media.id}
+                    >
+                      Edit Series
+                    </a>
+                  </>
+                )}
+                {media.mediaType == "Movie" && (
+                  <a
+                    className="btn btn-primary"
+                    href={"/mymdb/edit-movie/" + media.id}
+                  >
+                    Edit Movie
+                  </a>
+                )}
+                {media.mediaType == "Episode" && (
+                  <a
+                    className="btn btn-primary"
+                    href={"/mymdb/edit-episode/" + media.id}
+                  >
+                    Edit Episode
+                  </a>
+                )}
+
+                {media.mediaType !== "Series" && (
+                  <a
+                    className="btn btn-primary"
+                    href={"/mymdb/manage-attributes/" + media.id}
+                  >
+                    Manage Attributes
+                  </a>
+                )}
+              </div>
+
               <button
                 className="btn btn-danger"
                 onClick={() => {
                   const userConfirmed = window.confirm(
-                    "Are you sure you want to delete this media?"
+                    "Are you sure you want to delete this media?",
                   );
                   if (userConfirmed) {
                     handleDelete();
@@ -113,14 +162,6 @@ const ShowMedia: React.FC<{ mediaId: string; season: number }> = ({
               >
                 Delete Media
               </button>
-              {media.mediaType !== "Series" && (
-                <a
-                  className="btn btn-primary"
-                  href={"/mymdb/add-attribute/" + media.id}
-                >
-                  Add Attribute
-                </a>
-              )}
             </div>
           )}
           {media.reviews && (
@@ -139,6 +180,7 @@ const ShowMedia: React.FC<{ mediaId: string; season: number }> = ({
 
 const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
   const { title, posterPath, releaseDate, description } = media;
+  const formattedReleaseDate = formatReleaseDate(releaseDate);
   const attributes = media.mediaAttributes && media.mediaAttributes.$values;
   const [episodes, setEpisodes] = useState<Media[]>([]);
   const [prevEpisodeId, setPrevEpisodeId] = useState<string | null>(null);
@@ -149,27 +191,27 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
 
   const getContinueWatching = async (
     mediaId: string,
-    episodeId: string | undefined
-  ): Promise<IContinueWatching> => {
+    episodeId: string | undefined,
+  ): Promise<IContinueWatching | null> => {
     try {
       return await fetchContinueWatchingById(mediaId, episodeId);
     } catch (error) {
       console.error("Error fetching continue watching:", error);
-      return {} as IContinueWatching;
+      return null;
     }
   };
 
   const setWatchedTime = async (
     mediaId: string,
-    episodeId: string | undefined
+    episodeId: string | undefined,
   ) => {
     const cw = await getContinueWatching(mediaId, episodeId);
-    videoRef.current!.currentTime = cw.watchedTime ?? 0;
+    videoRef.current!.currentTime = cw?.watchedTime ?? 0;
   };
 
   const updateContinueWatching = async (
     mediaId: string,
-    episodeId: string | undefined
+    episodeId: string | undefined,
   ) => {
     if (videoRef.current) {
       const video = videoRef.current;
@@ -276,16 +318,16 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
   // Setting next and previous episode ids
   useEffect(() => {
     const currentSeasonEpisodes = episodes.filter(
-      (ep) => ep.seasonNumber === media.seasonNumber
+      (ep) => ep.seasonNumber === media.seasonNumber,
     );
 
     const prevEpisode = currentSeasonEpisodes.find(
-      (ep) => ep.episodeNumber === media.episodeNumber - 1
+      (ep) => ep.episodeNumber === media.episodeNumber - 1,
     );
 
     if (!prevEpisode && media.seasonNumber > 1) {
       const prevSeasonEpisodes = episodes.filter(
-        (ep) => ep.seasonNumber === media.seasonNumber - 1
+        (ep) => ep.seasonNumber === media.seasonNumber - 1,
       );
 
       const lastEpisodeOfPrevSeason = prevSeasonEpisodes.at(-1) || null;
@@ -296,13 +338,13 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
     }
 
     const nextEpisode = currentSeasonEpisodes.find(
-      (ep) => ep.episodeNumber === (media.episodeNumber || 0) + 1
+      (ep) => ep.episodeNumber === (media.episodeNumber || 0) + 1,
     );
 
     if (!nextEpisode && media.seasonNumber < (media.series?.seasons || 0)) {
       const nextSeasonEpisode = episodes.find(
         (ep) =>
-          ep.seasonNumber === media.seasonNumber + 1 && ep.episodeNumber === 1
+          ep.seasonNumber === media.seasonNumber + 1 && ep.episodeNumber === 1,
       );
 
       setNextEpisodeId(nextSeasonEpisode?.id || null);
@@ -364,24 +406,12 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
       {media.videoPath && (
         <div className="row justify-content-center mb-4">
           <div className="col-12 col-md-8">
-            <video
+            <VideoPlayer
               ref={videoRef}
-              src={`${API_URL}static/${media.videoPath}`}
-              controls
+              src={media.id}
+              attributes={attributes}
               className="w-100 rounded no-focus-outline"
-            >
-              {attributes
-                .filter((attr) => attr.type.toLowerCase() === "subtitle")
-                .map((attribute) => (
-                  <track
-                    key={attribute.language}
-                    src={`${API_URL}static/${attribute.attributePath}`}
-                    kind="subtitles"
-                    srcLang={attribute.language}
-                    label={attribute.language}
-                  />
-                ))}
-            </video>
+            />
           </div>
         </div>
       )}
@@ -421,9 +451,7 @@ const ShowMovieOrEpisode: React.FC<Media> = (media: Media) => {
                 </h4>
               </>
             )}
-          {releaseDate && (
-            <p>Release date: {releaseDate.toLocaleDateString()}</p>
-          )}
+          {formattedReleaseDate && <p>{formattedReleaseDate}</p>}
           <p>{description}</p>
         </div>
         <div className="col-md-4 mb-4">
@@ -473,14 +501,14 @@ const ShowSeries: React.FC<Media & { selectedSeason: number }> = (series) => {
             {episodes &&
             episodes.$values &&
             episodes.$values.filter(
-              (episode: Media) => episode.seasonNumber === season
+              (episode: Media) => episode.seasonNumber === season,
             ).length ? (
               <div className="container mt-4">
                 <div className="episode-list d-flex row">
                   {episodes.$values
                     .filter((episode: Media) => episode.seasonNumber === season)
                     .sort(
-                      (a: Media, b: Media) => a.episodeNumber - b.episodeNumber
+                      (a: Media, b: Media) => a.episodeNumber - b.episodeNumber,
                     )
                     .map((episode: Media) => (
                       <div
@@ -511,7 +539,6 @@ const ShowSeries: React.FC<Media & { selectedSeason: number }> = (series) => {
             className="img-fluid rounded"
             backupImagePath="/film.png"
           />
-          {/* <img src={posterPath} alt={title} className="img-fluid rounded" /> */}
         </div>
       </div>
     </div>
@@ -578,7 +605,7 @@ const ShowReviews: React.FC<{ reviewsParam: Review[]; mediaId: string }> = ({
           <div
             key={review.id}
             className={"card text-white mb-2 ".concat(
-              review.userId == userId ? "bg-secondary" : "bg-dark"
+              review.userId == userId ? "bg-secondary" : "bg-dark",
             )}
           >
             <div className="row g-0 align-items-center flex-column flex-md-row">

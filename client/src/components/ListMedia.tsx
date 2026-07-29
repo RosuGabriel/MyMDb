@@ -17,7 +17,7 @@ const ListMedia: React.FC = () => {
     (queryParams.get("type") as "movies" | "series" | "all") || "all";
 
   const [mediaType, setMediaType] = useState<"movies" | "series" | "all">(
-    initialMediaType
+    initialMediaType,
   );
   const [allMedia, setAllMedia] = useState<Media[]>([]);
   const [media, setMedia] = useState<Media[]>([]);
@@ -31,7 +31,8 @@ const ListMedia: React.FC = () => {
 
       fetchedMedia.sort((a, b) => {
         return (
-          new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime()
+          new Date(b.dateModified).getTime() -
+          new Date(a.dateModified).getTime()
         );
       });
 
@@ -48,7 +49,7 @@ const ListMedia: React.FC = () => {
       // Filter by search query
       if (searchQuery && searchQuery.trim()) {
         updatedMedia = updatedMedia.filter((m) =>
-          m.title.toLowerCase().includes(searchQuery.toLowerCase())
+          m.title.toLowerCase().includes(searchQuery.toLowerCase()),
         );
       }
 
@@ -76,7 +77,7 @@ const ListMedia: React.FC = () => {
 
     if (searchQuery && searchQuery.trim()) {
       filteredMedia = filteredMedia.filter((m) =>
-        m.title.toLowerCase().includes(searchQuery.toLowerCase())
+        m.title.toLowerCase().includes(searchQuery.toLowerCase()),
       );
       setSearchActive(true);
     } else {

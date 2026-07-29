@@ -5,12 +5,15 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 function Navbar() {
+  const largeWidth = 1200;
   const [isLogged, setIsLogged] = useState(isAuthenticated());
   const [isAdminUser, setIsAdminUser] = useState(isAdmin());
   const navigate = useNavigate();
   const [searchQuery, setSearch] = useState("");
   const [isCollapsed, setIsCollapsed] = useState(true);
-  const [isLargeScreen, setIsLargeScreen] = useState(window.innerWidth >= 992);
+  const [isLargeScreen, setIsLargeScreen] = useState(
+    window.innerWidth >= largeWidth,
+  );
   const [logoWidth, setLogoWidth] = useState(0);
   const [userButtonsWidth, setUserButtonsWidth] = useState(0);
 
@@ -19,7 +22,7 @@ function Navbar() {
   };
 
   const handleResize = () => {
-    setIsLargeScreen(window.innerWidth >= 992);
+    setIsLargeScreen(window.innerWidth >= largeWidth);
   };
 
   useEffect(() => {
@@ -63,7 +66,7 @@ function Navbar() {
   };
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top p-3">
+    <nav className="navbar navbar-expand-xl navbar-dark bg-dark fixed-top p-3">
       <div className="container-fluid d-flex align-items-center">
         <a
           id="app-logo"
@@ -79,7 +82,6 @@ function Navbar() {
         >
           <img src="/logo.png" alt="RedPanda Logo" style={{ height: "40px" }} />
         </a>
-        {/* "154.77px" */}
         <button
           className="navbar-toggler"
           type="button"
@@ -129,9 +131,14 @@ function Navbar() {
 
             <div id="user-buttons" className="btn-group">
               {isAdminUser && (
-                <a className="btn btn-dark" href="/mymdb/create">
-                  Add Media
-                </a>
+                <>
+                  <a className="btn btn-dark" href="/mymdb/create">
+                    Add Media
+                  </a>
+                  <a className="btn btn-dark" href="/mymdb/manage-users">
+                    Manage Users
+                  </a>
+                </>
               )}
               {isLogged ? (
                 <>

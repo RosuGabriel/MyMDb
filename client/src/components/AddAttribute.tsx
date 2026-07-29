@@ -31,7 +31,7 @@ const CreateAttribute: React.FC<AddAttributeProps> = ({ mediaId }) => {
       <form onSubmit={handleSubmit}>
         <div className="mb-3">
           <label htmlFor="type" className="form-label">
-            Type:
+            Type
           </label>
           <select
             className="form-control"
@@ -46,10 +46,11 @@ const CreateAttribute: React.FC<AddAttributeProps> = ({ mediaId }) => {
         </div>
         <div className="mb-3">
           <label htmlFor="language" className="form-label">
-            Language:
+            Language
           </label>
           <select
             className="form-control"
+            id="language"
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
             required
@@ -73,9 +74,11 @@ const CreateAttribute: React.FC<AddAttributeProps> = ({ mediaId }) => {
             required
           />
         </div>
-        <button type="submit" className="btn btn-success">
-          Add Attribute
-        </button>
+        <div className="d-flex flex-row justify-content-center align-items-center mt-4">
+          <button className="btn btn-success" type="submit">
+            Add Attribute
+          </button>
+        </div>
       </form>
     </div>
   );

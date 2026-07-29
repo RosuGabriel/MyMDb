@@ -1,6 +1,6 @@
 ﻿namespace MyMDb.Data
 {
-    public class Extensions
+    public static class Extensions
     {
         static readonly List<string> videoExtensions = new List<string> 
         {
@@ -27,7 +27,7 @@
             return CheckFileExtension(fileName, imageExtensions);
         }
 
-        static bool CheckFileExtension(string fileName, List<string> validExtensions)
+        private static bool CheckFileExtension(string fileName, List<string> validExtensions)
         {
             int dotPos = fileName.LastIndexOf('.');
 
