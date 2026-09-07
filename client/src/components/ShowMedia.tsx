@@ -13,6 +13,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "../App.css";
 import VideoPlayer from "./VideoPlayer";
 import ImageDisplay from "./ImageDisplay";
+import SkeletonLoader from "./SkeletonLoader";
 import {
   addContinueWatching,
   deleteContinueWatching,
@@ -42,6 +43,7 @@ const ShowMedia: React.FC<{ mediaId: string; season: number }> = ({
   const [selectedSeason, setSelectedSeason] = useState(season);
   const navigate = useNavigate();
   const [isAdminUser, setIsAdminUser] = useState(isAdmin());
+  const [loading, setLoading] = useState(true);
 
   const handleDelete = async () => {
     try {
@@ -68,8 +70,10 @@ const ShowMedia: React.FC<{ mediaId: string; season: number }> = ({
           }
         }
         setMedia(fetchedMedia);
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching media:", error);
+        setLoading(false);
       }
     };
 
@@ -96,7 +100,41 @@ const ShowMedia: React.FC<{ mediaId: string; season: number }> = ({
 
   return (
     <div className="media-page p-0 pb-5 p-md-1 p-lg-3">
-      {media ? (
+      {loading ? (
+        <div className="container mt-4">
+          {/* Video Player Skeleton */}
+          <div className="row justify-content-center mb-4">
+            <div className="col-12 col-md-8">
+              <SkeletonLoader type="image" width="100%" height="500px" />
+            </div>
+          </div>
+
+          {/* Description and Poster Skeleton */}
+          <div className="row">
+            {/* Left side - Description Skeleton */}
+            <div className="col-md-8 mb-4">
+              <div className="bg-dark rounded p-4">
+                <SkeletonLoader
+                  type="text"
+                  height="2.5rem"
+                  width="70%"
+                />
+                <SkeletonLoader
+                  type="text"
+                  height="1rem"
+                  width="90%"
+                  count={5}
+                />
+              </div>
+            </div>
+
+            {/* Right side - Poster Skeleton */}
+            <div className="col-md-4 mb-4">
+              <SkeletonLoader type="image" width="100%" height="450px" />
+            </div>
+          </div>
+        </div>
+      ) : media ? (
         <>
           {media.mediaType === "Series" ? (
             <ShowSeries {...media} selectedSeason={selectedSeason} />

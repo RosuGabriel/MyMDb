@@ -6,6 +6,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "../App.css";
 import MediaItem from "./MediaItem";
 import ContinueWatching from "./ContinueWatching";
+import SkeletonLoader from "./SkeletonLoader";
 
 const ListMedia: React.FC = () => {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ const ListMedia: React.FC = () => {
   const [allMedia, setAllMedia] = useState<Media[]>([]);
   const [media, setMedia] = useState<Media[]>([]);
   const [searchActive, setSearchActive] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Fetch media list
   useEffect(() => {
@@ -54,6 +56,7 @@ const ListMedia: React.FC = () => {
       }
 
       setMedia(updatedMedia);
+      setLoading(false);
     };
 
     fetchMediaList();
@@ -122,9 +125,22 @@ const ListMedia: React.FC = () => {
       <div className="container-fluid">
         {!searchActive && <ContinueWatching />}
         <div className="row d-flex">
-          {media.map((m) => (
-            <MediaItem key={m.id} media={m} defaultImage={defaultImage} />
-          ))}
+          {loading ? (
+            <div className="row w-100">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="col-6 col-sm-4 col-md-4 col-lg-3 col-xl-2 mb-4 text-decoration-none"
+                >
+                  <SkeletonLoader type="card" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            media.map((m) => (
+              <MediaItem key={m.id} media={m} defaultImage={defaultImage} />
+            ))
+          )}
         </div>
       </div>
     </div>

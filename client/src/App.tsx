@@ -66,7 +66,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="App">
+    <div className="App" data-bs-theme="dark">
       <BrowserRouter>
         <Navbar />
         <div

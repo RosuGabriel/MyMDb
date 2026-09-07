@@ -142,3 +142,172 @@ body,
   padding-top: 0.1rem;
   padding-bottom: 0.1rem;
 }
+
+/* Animations */
+.btn:not(.btn-outline-light),
+button:not([class*="searchbar"]) {
+  transition: all 0.2s ease;
+}
+
+.btn:hover:not(.btn-outline-light),
+button:not([class*="searchbar"]):hover {
+  transform: translateY(-1px);
+}
+
+.btn:active:not(.btn-outline-light),
+button:not([class*="searchbar"]):active {
+  transform: translateY(0);
+}
+
+.card {
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+.form-control,
+.form-select {
+  transition: all 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+  transform: scale(1.01);
+}
+
+.table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.table tbody tr:hover {
+  transform: translateY(-1px);
+}
+
+/* Exclude search button from animations */
+.btn-outline-light {
+  transition: none;
+}
+
+.btn-outline-light:hover {
+  transform: none;
+}
+
+/* Skeleton Loader Animation */
+@keyframes skeleton-pulse {
+  0% {
+    background-color: #2a2a2a;
+  }
+  50% {
+    background-color: #3a3a3a;
+  }
+  100% {
+    background-color: #2a2a2a;
+  }
+}
+
+.skeleton-item {
+  background-color: #2a2a2a;
+  border-radius: 4px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-card {
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.skeleton-table-row {
+  background-color: #2a2a2a;
+  border-radius: 4px;
+}
+
+.skeleton-table-row td {
+  padding: 1rem 0.75rem;
+  border: none;
+}
+
+/* User Cards Mobile Styles */
+.users-mobile-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  padding: 1rem 0;
+}
+
+.user-card {
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
+}
+
+.user-card:hover {
+  border-color: #ab3928;
+  box-shadow: 0 4px 12px rgba(171, 57, 40, 0.25);
+  transform: translateY(-2px);
+}
+
+.user-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+}
+
+.user-card-row:last-of-type {
+  border-bottom: none;
+}
+
+.user-card-label {
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: #888;
+  text-transform: capitalize;
+}
+
+.user-card-value {
+  text-align: right;
+  color: #e0e0e0;
+  font-size: 0.95rem;
+}
+
+.user-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.user-name {
+  flex: 1;
+  text-align: right;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #e0e0e0;
+}
+
+.user-email {
+  font-size: 0.9rem;
+  color: #999;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.user-card-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #2a2a2a;
+}

@@ -101,77 +101,168 @@ const ManageUsers: React.FC = () => {
           No users found.
         </div>
       ) : (
-        <div className="table-responsive">
-          <table className="table table-dark table-hover">
-            <thead>
-              <tr>
-                <th scope="col" style={{ width: "60px" }}>
-                  Photo
-                </th>
-                <th scope="col">Name</th>
-                <th scope="col">Email</th>
-                <th scope="col">Role</th>
-                <th scope="col" style={{ width: "100px" }}>
-                  Approved
-                </th>
-                <th scope="col" style={{ width: "100px" }}>
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.id}>
-                  <td>
-                    <div
-                      style={{
-                        width: "40px",
-                        height: "40px",
-                        borderRadius: "50%",
-                        overflow: "hidden",
-                        backgroundColor: "#333",
-                      }}
-                    >
-                      {user.profilePicPath ? (
-                        <ImageDisplay
-                          src={user.profilePicPath}
-                          alt={user.userName || user.email || "User"}
+        <>
+          {/* Desktop Table View */}
+          <div className="table-responsive d-none d-lg-block">
+            <table className="table table-dark table-hover">
+              <thead>
+                <tr>
+                  <th scope="col" style={{ width: "60px" }}>
+                    Photo
+                  </th>
+                  <th scope="col">Name</th>
+                  <th scope="col">Email</th>
+                  <th scope="col">Role</th>
+                  <th scope="col" style={{ width: "100px" }}>
+                    Approved
+                  </th>
+                  <th scope="col" style={{ width: "100px" }}>
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user) => (
+                  <tr key={user.id}>
+                    <td>
+                      <div
+                        style={{
+                          width: "40px",
+                          height: "40px",
+                          borderRadius: "50%",
+                          overflow: "hidden",
+                          backgroundColor: "#333",
+                        }}
+                      >
+                        {user.profilePicPath ? (
+                          <ImageDisplay
+                            src={user.profilePicPath}
+                            alt={user.userName || user.email || "User"}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              color: "#888",
+                              fontSize: "18px",
+                            }}
+                          >
+                            👤
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="align-middle">
+                      {user.userName || <span className="text-muted">N/A</span>}
+                    </td>
+                    <td className="align-middle">{user.email}</td>
+                    <td className="align-middle">
+                      {user.roles?.includes("admin") ? (
+                        <span className="badge bg-danger">Admin</span>
+                      ) : (
+                        <span className="badge bg-secondary">User</span>
+                      )}
+                    </td>
+                    <td className="align-middle">
+                      <div className="form-check form-switch">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          role="switch"
+                          checked={user.approved}
+                          onChange={() => handleToggleApproval(user)}
+                          disabled={user.roles?.includes("admin")}
                           style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
+                            cursor: user.roles?.includes("admin")
+                              ? "not-allowed"
+                              : "pointer",
                           }}
                         />
-                      ) : (
-                        <div
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: "#888",
-                            fontSize: "18px",
-                          }}
-                        >
-                          👤
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="align-middle">
-                    {user.userName || <span className="text-muted">N/A</span>}
-                  </td>
-                  <td className="align-middle">{user.email}</td>
-                  <td className="align-middle">
-                    {user.roles?.includes("admin") ? (
-                      <span className="badge bg-danger">Admin</span>
+                      </div>
+                    </td>
+                    <td className="align-middle">
+                      <button
+                        className="btn btn-sm btn-danger"
+                        onClick={() => handleDeleteUser(user)}
+                        disabled={user.roles?.includes("admin")}
+                        title={
+                          user.roles?.includes("admin")
+                            ? "Cannot delete admin users"
+                            : "Delete user"
+                        }
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="users-mobile-container d-lg-none">
+            {users.map((user) => (
+              <div key={user.id} className="user-card">
+                <div className="user-card-header">
+                  <div
+                    style={{
+                      width: "50px",
+                      height: "50px",
+                      borderRadius: "50%",
+                      overflow: "hidden",
+                      backgroundColor: "#333",
+                    }}
+                  >
+                    {user.profilePicPath ? (
+                      <ImageDisplay
+                        src={user.profilePicPath}
+                        alt={user.userName || user.email || "User"}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
                     ) : (
-                      <span className="badge bg-secondary">User</span>
+                      <div
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: "#888",
+                          fontSize: "24px",
+                        }}
+                      >
+                        👤
+                      </div>
                     )}
-                  </td>
-                  <td className="align-middle">
-                    <div className="form-check form-switch">
+                  </div>
+                  <div className="user-name">
+                    {user.userName || <span className="text-muted">N/A</span>}
+                  </div>
+                </div>
+
+                <div className="user-email">{user.email}</div>
+
+                <div className="user-card-row">
+                  <div className="user-card-label">Approved</div>
+                  <div className="user-card-value">
+                    <div
+                      className="form-check form-switch"
+                      style={{ marginBottom: 0 }}
+                    >
                       <input
                         className="form-check-input"
                         type="checkbox"
@@ -186,26 +277,34 @@ const ManageUsers: React.FC = () => {
                         }}
                       />
                     </div>
-                  </td>
-                  <td className="align-middle">
-                    <button
-                      className="btn btn-sm btn-danger"
-                      onClick={() => handleDeleteUser(user)}
-                      disabled={user.roles?.includes("admin")}
-                      title={
-                        user.roles?.includes("admin")
-                          ? "Cannot delete admin users"
-                          : "Delete user"
-                      }
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </div>
+                </div>
+
+                <div className="user-card-actions">
+                  <div>
+                    {user.roles?.includes("admin") ? (
+                      <span className="badge bg-danger">Admin</span>
+                    ) : (
+                      <span className="badge bg-secondary">User</span>
+                    )}
+                  </div>
+                  <button
+                    className="btn btn-sm btn-danger"
+                    onClick={() => handleDeleteUser(user)}
+                    disabled={user.roles?.includes("admin")}
+                    title={
+                      user.roles?.includes("admin")
+                        ? "Cannot delete admin users"
+                        : "Delete user"
+                    }
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

@@ -402,7 +402,7 @@ wwwroot/
 appsettings*
 *appsettings*
 .env
-vite.config.ts
+host_nginx.txt
 
 # Node Build Files
 dist/
